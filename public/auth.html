@@ -1,0 +1,44 @@
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Page</title>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="/index">Home Page</a>
+    </nav>
+    <div class="sign-in-or-sign-up">
+        <button id="sign-in-btn">Sign In</button>
+        <button id="sign-up-btn">Sign Up</button>
+
+    </div>
+
+    <div class="auth-div" id="sign-in-div" style="display: none;">
+        <form class="auth-form" id="sign-in-form" action="/signin">
+            <label for="email">Email:</label><br>
+            <input type="text" id="email" name="email" required><br>
+            <label for="password">Password:</label><br>
+            <input type="password" id="password" name="password" required><br><br>
+            <button type="submit">Sign In</button>
+        </form>
+    </div>
+    <div class="auth-div" id="sign-up-div" style="display: none;">
+        <form class="auth-form" id="sign-up-form" action="/signup">
+            <label for="new-email">Email:</label><br>
+            <input type="text" id="new-email" name="sign-up-email" required><br>
+            <label for="new-name">Name:</label><br>
+            <input type="text" id="new-name" name="sign-up-name" required><br>
+            <label for="new-password">Password:</label><br>
+            <input type="password" id="new-password" name="sign-up-password" required><br><br>
+            <label for="new-password">Confirm Password:</label><br>
+            <input type="password" id="new-password-confirm" name="sign-up-confirm-password" required><br><br>
+            <button type="submit">Sign Up</button>
+    </div>
+    <script src="auth.js"></script>
+</body>
+
+</html>

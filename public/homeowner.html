@@ -1,0 +1,38 @@
+<html>
+    <head>
+        <title>Homeowner Page</title>
+        <link rel="stylesheet" type="text/css" href="styles.css">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <!--Homeowners can see complaints made by others in the community and also create new complaints.
+        -->
+        <nav class="navbar">
+            <a href="/homeowner">Homeowner Page</a> |
+            <a href="/index">Home Page</a>
+        </nav>
+        <h1>Welcome, <span>Homeowner</span>!</h1>
+        <section class="complaints-section">
+            <h2>Community Complaints</h2>
+            <div id="complaints-list">
+                <!-- sample data -->
+                 <table>
+                    <tr>
+                        <th>Complaint ID</th>
+                        <th>Homeowner Name</th>
+                        <th>Complaint Text</th>
+                        <th>Date Submitted</th>
+                        <th>Severity</th>
+                        <th>Status</th>
+                    </tr>
+                 </table>
+            </div>
+            <h3>Submit a New Complaint</h3>
+            <form id="complaint-form">
+                <label for="complaint-text">Complaint:</label><br>
+                <textarea id="complaint-text" name="complaint-text" rows="4" cols="50" required></textarea><br>
+                <button type="submit">Submit Complaint</button>
+            </form>
+    </body>
+</html>
