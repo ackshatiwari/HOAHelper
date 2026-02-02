@@ -43,13 +43,17 @@ signUpForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const email = document.getElementsByName('sign-up-email')[0].value;
     const name = document.getElementsByName('sign-up-name')[0].value;
+    const address = document.getElementsByName('home-address')[0].value;
+    const phone_number = document.getElementsByName('phone-number')[0].value;
+    const gender = document.getElementsByName('gender')[0].value;
+    const race = document.getElementsByName('race')[0].value;
     const password = document.getElementsByName('sign-up-password')[0].value;
     const confirmPassword = document.getElementsByName('sign-up-confirm-password')[0].value;
     const formData = new FormData(signUpForm);
     console.log(formData);
     fetch('/signup', {
         method: 'POST',
-        body: JSON.stringify({ email, name, password, confirmPassword }),
+        body: JSON.stringify({ email, name, address, phone_number, gender, race, password, confirmPassword }),
         headers: {
             'Content-Type': 'application/json'
         }

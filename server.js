@@ -13,10 +13,12 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 
 
+
 // Serve HTML files
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+//only if you are an admin, it will open for you
 app.get("/admin", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "admin.html"));
 });
@@ -36,7 +38,7 @@ app.post("/signin", async (req, res) => {
         email,
         password
     });
-    if(error) {
+    if (error) {
         console.log('Error signing in:', error);
         return res.json({ success: false, message: error.message });
     }
@@ -45,7 +47,7 @@ app.post("/signin", async (req, res) => {
 
 });
 app.post("/signup", async (req, res) => {
-    const { email, name, password, confirmPassword } = req.body;
+    const { email, name, address, phone_number, gender, race, password, confirmPassword } = req.body;
     if (password !== confirmPassword) {
         return res.json({ success: false, message: "Passwords do not match" });
     }
@@ -53,21 +55,42 @@ app.post("/signup", async (req, res) => {
         email,
         password,
         options: {
-            data: { name }
+            data: { name, address, phone_number, gender, race }
         }
     })
-    if(signupError) {
+    if (signupError) {
         console.log('Error signing up:', signupError);
-        return  res.json({ success: false, message: signupError.message });
+        return res.json({ success: false, message: signupError.message });
     }
     console.log('User signed up:', signupData.user);
+
+
+    const userId = signupData.user.id; 
+
+    const { data, error } = await supabase
+        .from('User_Details')
+        .insert([{
+            id: userId,          
+            full_name: name,
+            home_address: address,
+            phone_number: phone_number,
+            gender: gender,
+            race: race,
+            role: 'homeowner',
+            approved: false
+        }]);
+    if (error) {
+        console.log('Error inserting user details:', error);
+        return res.json({ success: false, message: error.message });
+    }
+    console.log('User details inserted:', data);
 
     //now automatically sign user in
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password
     })
-    if(signInError) {
+    if (signInError) {
         console.log('Error signing in:', signInError);
         return res.json({ success: false, message: signInError.message });
     }
