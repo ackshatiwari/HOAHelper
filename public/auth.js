@@ -6,6 +6,8 @@ const signInForm = document.getElementById('sign-in-form');
 const signUpForm = document.getElementById('sign-up-form');
 
 
+
+
 signInBtn.addEventListener('click', () => {
     signInDiv.style.display = 'block';
     signUpDiv.style.display = 'none';

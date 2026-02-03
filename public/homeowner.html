@@ -1,38 +1,71 @@
 <html>
-    <head>
-        <title>Homeowner Page</title>
-        <link rel="stylesheet" type="text/css" href="styles.css">
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
-    <body>
-        <!--Homeowners can see complaints made by others in the community and also create new complaints.
+
+<head>
+    <title>Homeowner Page</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+    <!--Homeowners can see complaints made by others in the community and also create new complaints.
         -->
-        <nav class="navbar">
-            <a href="/homeowner">Homeowner Page</a> |
-            <a href="/index">Home Page</a>
-        </nav>
-        <h1>Welcome, <span>Homeowner</span>!</h1>
-        <section class="complaints-section">
-            <h2>Community Complaints</h2>
-            <div id="complaints-list">
-                <!-- sample data -->
-                 <table>
-                    <tr>
-                        <th>Complaint ID</th>
-                        <th>Homeowner Name</th>
-                        <th>Complaint Text</th>
-                        <th>Date Submitted</th>
-                        <th>Severity</th>
-                        <th>Status</th>
-                    </tr>
-                 </table>
-            </div>
+    <nav class="navbar">
+        <a href="/homeowner">Homeowner Page</a> |
+        <a href="/index">Home Page</a>
+        <p id="logged-in-as"> | Logged in as Homeowner </p>
+    </nav>
+    <h1>Welcome, <span>Homeowner</span>!</h1>
+    <section class="complaints-section">
+        <h2>Community Complaints</h2>
+        <div id="complaints-list">
+            <!-- sample data -->
+            <table>
+                <tr>
+                    <th>Complaint ID</th>
+                    <th>Homeowner Name</th>
+                    <th>Complaint Text</th>
+                    <th>Date Submitted</th>
+                    <th>Severity</th>
+                    <th>Status</th>
+                </tr>
+            </table>
+        </div>
+        <button class="button" id="add-complaint-btn">Add New Complaint</button>
+        <dialog class="dialog-box" id="complaint-dialog">
             <h3>Submit a New Complaint</h3>
-            <form id="complaint-form">
-                <label for="complaint-text">Complaint:</label><br>
-                <textarea id="complaint-text" name="complaint-text" rows="4" cols="50" required></textarea><br>
-                <button type="submit">Submit Complaint</button>
-            </form>
-    </body>
+            <div id="map"></div>
+            <div>
+                <div class="container-webcam">
+                    <video id="webcam" autoplay></video>
+                    <button id="capture-btn">Capture Photo</button>
+                    <canvas id="canvasElement" style="display: none;"></canvas>
+                    <img id="photoPreview" src="" alt="Captured Photo Preview" style="display: none;">
+                </div>
+                <div>
+                    <input type="file" id="uploadImageInput" accept="image/*">
+                </div>
+            </div>
+            <div>
+                <div>
+                    <label for="complaint-textarea">Complaint Description:</label><br>
+                    <textarea id="complaint-textarea" rows="4" cols="50"></textarea>
+                </div>
+
+
+
+
+
+
+        </dialog>
+    </section>
+
+
+
+    </dialog>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCbcZ3W5eN9r38ZKYOg1GdOT79ymH4gtm8"></script>
+
+    <script src="homeowner.js"></script>
+</body>
+
 </html>
