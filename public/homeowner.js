@@ -7,6 +7,19 @@ const canvas = document.getElementById('canvasElement');
 const context = canvas.getContext('2d');
 const photoPreview = document.getElementById('photoPreview');
 
+// helper: convert dataURL to Blob so we can send it as a file
+function dataURLtoBlob(dataurl) {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+}
+
 
 
 //Google Maps Initialization
@@ -49,9 +62,9 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             webcam.srcObject = stream;
         })
         .catch((err) => {
-        console.error("An error occurred: " + err);
-        alert("Could not access the camera. Please allow camera permissions.");
-    });
+            console.error("An error occurred: " + err);
+            alert("Could not access the camera. Please allow camera permissions.");
+        });
 } else {
     alert("getUserMedia not supported in this browser.");
 }
@@ -69,5 +82,69 @@ addComplaintBtn.addEventListener('click', () => {
     initMap();
 
 
+});
+
+complaintForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const uploadImageInput = document.getElementById('uploadImageInput');
+    const camImgSrc = photoPreview.src;
+    const complaintTextarea = document.getElementById('complaint-textarea');
+    const complaintType = document.getElementById('complaint-type');
+    const complaintDate = document.getElementById('complaint-date');
+
+    const formData = new FormData(complaintForm);
+
+    // append camera capture as file (if present) and selected files (multiple)
+    if (camImgSrc && camImgSrc !== 'data:,') {
+        const blob = dataURLtoBlob(camImgSrc);
+        formData.append('images', blob, 'camera.png');
+    }
+    const files = uploadImageInput.files;
+    for (let i = 0; i < files.length; i++) formData.append('images', files[i]);
+    // include email for user lookup
+    formData.append('email', sessionStorage.getItem('email') || '');
+    if (!complaintTextarea.value.trim()) {
+        alert("Please enter a complaint description.");
+        return;
+    }
+    formData.append("complaintText", complaintTextarea.value);
+    formData.append("complaintType", complaintType.value);
+    if (!complaintType.value) {
+        alert("Please select a complaint type.");
+        return;
+    }
+    if (!complaintDate.value) {
+        formData.append("complaintDate", new Date().toISOString().split('T')[0]);
+    } else {
+        formData.append("complaintDate", complaintDate.value);
+    }
+    // no longer append single `fileImage` field; all images are sent as `images`.
+
+    if (marker) {
+        console.log("Marker exists, at ", marker.getPosition().lat(), marker.getPosition().lng());
+        formData.append("latitude", marker.getPosition().lat());
+        formData.append("longitude", marker.getPosition().lng());
+    } else {
+        alert("Please select a location on the map.");
+        return;
+    }
+
+    fetch('/submitComplaint', {
+        method: 'POST',
+        body: formData
+    })
+        .then(response => {
+            if (response.ok) {
+                alert("Complaint submitted successfully!");
+                complaintDialog.close();
+                window.location.reload();
+            } else {
+                alert("Failed to submit complaint.");
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting complaint:', error);
+            alert("An error occurred while submitting the complaint.");
+        });
 });
 

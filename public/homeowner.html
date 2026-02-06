@@ -34,30 +34,47 @@
         <button class="button" id="add-complaint-btn">Add New Complaint</button>
         <dialog class="dialog-box" id="complaint-dialog">
             <h3>Submit a New Complaint</h3>
+
             <div id="map"></div>
-            <div>
-                <div class="container-webcam">
-                    <video id="webcam" autoplay></video>
-                    <button id="capture-btn">Capture Photo</button>
-                    <canvas id="canvasElement" style="display: none;"></canvas>
-                    <img id="photoPreview" src="" alt="Captured Photo Preview" style="display: none;">
+            <form id="complaint-form" action="/submitComplaint" method="POST" enctype="multipart/form-data">
+                <div class="complaint-section">
+                    <div>
+                        <div class="container-webcam">
+                            <video id="webcam" autoplay></video>
+                            <button type="button" id="capture-btn">Capture Photo</button>
+                            <canvas id="canvasElement" style="display: none;"></canvas>
+                            <img id="photoPreview" name="cameraImage" style="display: none;">
+                        </div>
+                        <div>
+                            <label for="uploadImageInput">Or Upload an Image:</label>
+                            <input type="file" id="uploadImageInput" name="images" accept="image/*" multiple>
+                        </div>
+                    </div>
+
+
+                    <div class="container">
+                        <label for="complaint-textarea">Complaint Description:</label>
+                        <textarea id="complaint-textarea" rows="6"></textarea>
+
+                        <select id="complaint-type">
+                            <option>Litter</option>
+                            <option>Landscaping</option>
+                            <option>Signage</option>
+                            <option>Pathways</option>
+                            <option>Lighting</option>
+                            <option>Noise</option>
+                            <option>Other</option>
+                        </select>
+
+                        <input type="date" id="complaint-date">
+                    </div>
                 </div>
-                <div>
-                    <input type="file" id="uploadImageInput" accept="image/*">
+                <div id="submit-container">
+                    <button type="submit" class="button">Submit Complaint</button>
                 </div>
-            </div>
-            <div>
-                <div>
-                    <label for="complaint-textarea">Complaint Description:</label><br>
-                    <textarea id="complaint-textarea" rows="4" cols="50"></textarea>
-                </div>
-
-
-
-
-
-
+            </form>
         </dialog>
+
     </section>
 
 

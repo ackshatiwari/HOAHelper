@@ -2,15 +2,21 @@ import express from "express";
 import "dotenv/config";
 import path from "path";
 import { supabase } from "./client.js";
+import multer from "multer";
 
 const app = express();
 const port = 3000;
+
+
 
 const __dirname = path.resolve();
 
 //middleware
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); 
+const upload = multer({ dest: 'uploads/' });
+
 
 
 
@@ -28,6 +34,10 @@ app.get("/homeowner", (req, res) => {
 app.get("/auth", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "auth.html"));
 });
+
+
+
+// (no client-side dataURL helper here)
 
 
 // Request Endpoints
@@ -65,19 +75,20 @@ app.post("/signup", async (req, res) => {
     console.log('User signed up:', signupData.user);
 
 
-    const userId = signupData.user.id; 
+    const userId = signupData.user.id;
 
     const { data, error } = await supabase
         .from('User_Details')
         .insert([{
-            id: userId,          
+            id: userId,
             full_name: name,
             home_address: address,
             phone_number: phone_number,
             gender: gender,
             race: race,
             role: 'homeowner',
-            approved: false
+            approved: false,
+            email: email
         }]);
     if (error) {
         console.log('Error inserting user details:', error);
@@ -99,7 +110,60 @@ app.post("/signup", async (req, res) => {
 });
 
 
+app.post("/submitComplaint", upload.array('images', 5), async (req, res) => {
+
+    console.log("Received complaint submission");
+    //Get Supabase Bucket name Report_Images
+    const bucketName = 'Report_Images';
+    //Extract Form Data
+    const form = req.body || {};
+    // uploaded images (camera capture + file inputs) are available as an array
+    const images = req.files || [];
+
+    console.log('req.body:', req.body);
+    console.log('req.files (images):', req.files);
+
+    const category = form.complaintType || null;
+    const description = form.complaintText || null;
+    const latitude = form.latitude || null;
+    const longitude = form.longitude || null;
+    const complaintDate = form.complaintDate || null;
+
+    // Look up user id (await the query)
+    const email = form.email || null;
+    let userId = null;
+    if (email) {
+        const { data: userData, error: userError } = await supabase
+            .from('User_Details')
+            .select('id')
+            .eq('email', email)
+            .single();
+        if (userError) console.log('User lookup error:', userError);
+        if (userData) userId = userData.id;
+    }
+
+    const { data, error } = await supabase
+        .from('User_Reports')
+        .insert([{
+            id: userId,
+            category: category,
+            description: description,
+            latitude: latitude,
+            longitude: longitude,
+            complaint_date: complaintDate
+        }]);
+    if (error) {
+        console.log('Error inserting complaint:', error);
+        return res.json({ success: false, message: error.message });
+    }
+    console.log('Complaint inserted:', data);
+
+    res.json({ success: true })
+});
+
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
+
+
