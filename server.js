@@ -3,28 +3,25 @@ import "dotenv/config";
 import path from "path";
 import { supabase } from "./client.js";
 import multer from "multer";
+import crypto from "crypto";
 
 const app = express();
 const port = 3000;
-
-
 
 const __dirname = path.resolve();
 
 //middleware
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); 
-const upload = multer({ dest: 'uploads/' });
-
-
-
+app.use(express.urlencoded({ extended: true }));
+// use memory storage so we can upload buffers directly to Supabase
+const storage = multer.memoryStorage();
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 // Serve HTML files
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
-//only if you are an admin, it will open for you
 app.get("/admin", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "admin.html"));
 });
@@ -34,11 +31,6 @@ app.get("/homeowner", (req, res) => {
 app.get("/auth", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "auth.html"));
 });
-
-
-
-// (no client-side dataURL helper here)
-
 
 // Request Endpoints
 app.post("/signin", async (req, res) => {
@@ -56,6 +48,7 @@ app.post("/signin", async (req, res) => {
     return res.json({ success: true, user: data.user });
 
 });
+
 app.post("/signup", async (req, res) => {
     const { email, name, address, phone_number, gender, race, password, confirmPassword } = req.body;
     if (password !== confirmPassword) {
@@ -113,11 +106,8 @@ app.post("/signup", async (req, res) => {
 app.post("/submitComplaint", upload.array('images', 5), async (req, res) => {
 
     console.log("Received complaint submission");
-    //Get Supabase Bucket name Report_Images
     const bucketName = 'Report_Images';
-    //Extract Form Data
     const form = req.body || {};
-    // uploaded images (camera capture + file inputs) are available as an array
     const images = req.files || [];
 
     console.log('req.body:', req.body);
@@ -131,26 +121,72 @@ app.post("/submitComplaint", upload.array('images', 5), async (req, res) => {
 
     // Look up user id (await the query)
     const email = form.email || null;
+    console.log('Looking up user for email:', email);
     let userId = null;
     if (email) {
+        console.log("Inside user lookup with email:", email);
+
         const { data: userData, error: userError } = await supabase
             .from('User_Details')
             .select('id')
             .eq('email', email)
-            .single();
-        if (userError) console.log('User lookup error:', userError);
-        if (userData) userId = userData.id;
+        if (userError) {
+            console.log('User lookup error:', userError);
+            console.log('Email provided for lookup:', email);
+            console.log(userData);
+        }
+        if (userData && userData.length > 0) {
+            console.log('User found for email:', email, 'User ID:', userData[0].id);
+            userId = userData[0].id;
+        } else {
+            console.log('No user found for email:', email);
+        }
+    }
+
+    if (!userId) {
+        console.log('User ID not found for email:', email); 
+        return res.status(400).json({ success: false, message: 'User not found' });
+    }
+
+    // upload files to Supabase storage under a per-user folder (userId/filename)
+    const uploadedUrls = [];
+    if (userId && images.length) {
+        console.log("Ready for uploading files for userId:", userId, "Number of files:", images.length);
+        for (const file of images) {
+            try {
+                console.log("Processing file:", file.originalname);
+                const safeName = (file.originalname || 'upload').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, '');
+                const filename = `${Date.now()}-${crypto.randomUUID()}-${safeName}`;
+                const objectPath = `${userId}/${filename}`;
+
+                const storageClient = supabase;
+                const { data: uploadData, error: uploadError } = await storageClient.storage
+                    .from(bucketName)
+                    .upload(objectPath, file.buffer, { contentType: file.mimetype, upsert: false });
+
+                if (uploadError) {
+                    console.error('Upload error for', file.originalname, uploadError);
+                    continue;
+                }
+
+                const { data: publicData } = supabase.storage.from(bucketName).getPublicUrl(objectPath);
+                if (publicData && publicData.publicUrl) uploadedUrls.push(publicData.publicUrl);
+            } catch (err) {
+                console.error('Error uploading file:', err);
+            }
+        }
     }
 
     const { data, error } = await supabase
         .from('User_Reports')
         .insert([{
-            id: userId,
             category: category,
             description: description,
             latitude: latitude,
             longitude: longitude,
-            complaint_date: complaintDate
+            complaint_date: complaintDate,
+            image_urls: uploadedUrls,
+            user_id: userId
         }]);
     if (error) {
         console.log('Error inserting complaint:', error);
@@ -165,5 +201,3 @@ app.post("/submitComplaint", upload.array('images', 5), async (req, res) => {
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
-
-
