@@ -18,6 +18,20 @@ app.use(express.urlencoded({ extended: true }));
 const storage = multer.memoryStorage();
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
+
+
+function formatDateTimeHHMM(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+
+
 // Serve HTML files
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
@@ -113,11 +127,14 @@ app.post("/submitComplaint", upload.array('images', 5), async (req, res) => {
     console.log('req.body:', req.body);
     console.log('req.files (images):', req.files);
 
+
+
+
     const category = form.complaintType || null;
     const description = form.complaintText || null;
     const latitude = form.latitude || null;
     const longitude = form.longitude || null;
-    const complaintDate = form.complaintDate || null;
+    const complaintDate = form.complaintDate ? formatDateTimeHHMM(new Date(form.complaintDate)) : formatDateTimeHHMM(new Date());
 
     // Look up user id (await the query)
     const email = form.email || null;
@@ -144,7 +161,7 @@ app.post("/submitComplaint", upload.array('images', 5), async (req, res) => {
     }
 
     if (!userId) {
-        console.log('User ID not found for email:', email); 
+        console.log('User ID not found for email:', email);
         return res.status(400).json({ success: false, message: 'User not found' });
     }
 
@@ -156,7 +173,7 @@ app.post("/submitComplaint", upload.array('images', 5), async (req, res) => {
             try {
                 console.log("Processing file:", file.originalname);
                 const safeName = (file.originalname || 'upload').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, '');
-                const filename = `${Date.now()}-${crypto.randomUUID()}-${safeName}`;
+                const filename = `${Date.now()}-${complaintDate}-${safeName}`;
                 const objectPath = `${userId}/${filename}`;
 
                 const storageClient = supabase;
@@ -180,6 +197,7 @@ app.post("/submitComplaint", upload.array('images', 5), async (req, res) => {
     const { data, error } = await supabase
         .from('User_Reports')
         .insert([{
+            created_at: complaintDate,
             category: category,
             description: description,
             latitude: latitude,
