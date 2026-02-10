@@ -1,15 +1,203 @@
-<html>
-    <head>
-        <link rel="stylesheet" type="text/css" href="styles.css">
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Admin Page</title>
-    </head>
-    <body>
-        <!-- First there should be some sort of invite link for a particular community -->
-        <nav class="navbar">
-            <a href="/admin">Admin Page</a> |
-            <a href="/">Home</a>
-        </nav>
-    </body>
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Admin — Reports Dashboard</title>
+    <style>
+        :root{
+            --bg:#f4f7fb; --card:#ffffff; --muted:#6b7280; --accent:#2563eb; --danger:#dc2626; --success:#16a34a;
+            --glass: rgba(255,255,255,0.6);
+            --max-width:1200px;
+            --radius:10px;
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+        *{box-sizing:border-box}
+        body{margin:0;background:linear-gradient(180deg,var(--bg),#eef3fb);color:#0f172a}
+        .container{max-width:var(--max-width);margin:28px auto;padding:18px}
+        header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+        header h1{margin:0;font-size:20px}
+        header .meta{color:var(--muted);font-size:13px}
+
+        .layout{display:grid;grid-template-columns:260px 1fr;gap:18px}
+
+        /* Sidebar */
+        .sidebar{background:var(--card);padding:14px;border-radius:var(--radius);box-shadow:0 6px 18px rgba(15,23,42,0.06)}
+        .sidebar h2{font-size:14px;margin:0 0 8px}
+        .filters{display:flex;flex-direction:column;gap:8px}
+        .filter-btn{display:flex;justify-content:space-between;padding:10px;border-radius:8px;border:1px solid #eef2ff;background:transparent;cursor:pointer}
+        .search{margin:10px 0}
+        .search input{width:100%;padding:8px;border-radius:8px;border:1px solid #e6eefc}
+
+        /* Main */
+        .main{display:flex;flex-direction:column;gap:12px}
+        .grid{display:grid;grid-template-columns:1fr 360px;gap:12px}
+
+        .card{background:var(--card);padding:14px;border-radius:var(--radius);box-shadow:0 8px 22px rgba(15,23,42,0.06)}
+        .report-header{display:flex;align-items:flex-start;gap:12px}
+        .report-meta{color:var(--muted);font-size:13px}
+
+        .images{display:flex;gap:8px;margin-top:10px}
+        .images img{width:120px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #eef2ff}
+
+        /* Actions panel */
+        .actions h3{margin:0 0 8px}
+        .field{display:flex;flex-direction:column;margin-bottom:8px}
+        label{font-size:13px;margin-bottom:6px;color:#111827}
+        select,input,textarea{padding:8px;border-radius:8px;border:1px solid #e6eefc;font-size:14px}
+        textarea{min-height:100px;resize:vertical}
+        .btns{display:flex;gap:8px;margin-top:8px}
+        .btn{padding:10px 12px;border-radius:8px;border:none;cursor:pointer}
+        .btn.primary{background:var(--accent);color:white}
+        .btn.ghost{background:transparent;border:1px solid #e6eefc}
+        .btn.warn{background:var(--danger);color:white}
+        .status{display:inline-block;padding:6px 8px;border-radius:999px;font-size:12px}
+
+        /* Data table */
+        table{width:100%;border-collapse:collapse;margin-top:8px}
+        th,td{padding:10px;border-bottom:1px solid #f1f5f9;text-align:left;font-size:13px}
+        th{color:var(--muted);font-weight:600}
+
+        /* Responsive */
+        @media (max-width:940px){
+            .layout{grid-template-columns:1fr}
+            .grid{grid-template-columns:1fr}
+            .images img{width:100px;height:64px}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>Reports — Admin Console</h1>
+                <div class="meta">Moderation workspace · View and act on homeowner reports</div>
+            </div>
+            <div class="meta">Logged in as Admin • <span style="color:var(--accent)">Community A</span></div>
+        </header>
+
+        <div class="layout">
+            <aside class="sidebar">
+                <h2>Filters</h2>
+                <div class="filters">
+                    <button class="filter-btn">All Reports <span class="count">24</span></button>
+                    <button class="filter-btn">Open <span class="count">8</span></button>
+                    <button class="filter-btn">Assigned <span class="count">6</span></button>
+                    <button class="filter-btn">Closed <span class="count">10</span></button>
+                    <button class="filter-btn">Redirected <span class="count">2</span></button>
+                </div>
+                <div class="search">
+                    <label for="q">Search reports</label>
+                    <input id="q" placeholder="Search by id, name, address...">
+                </div>
+                <div style="margin-top:10px;color:var(--muted);font-size:13px">Quick actions</div>
+                <div style="display:flex;gap:8px;margin-top:8px">
+                    <button class="btn ghost">Export</button>
+                    <button class="btn ghost">Bulk assign</button>
+                </div>
+            </aside>
+
+            <main class="main">
+                <div class="grid">
+                    <!-- Report detail -->
+                    <section class="card">
+                        <div class="report-header">
+                            <div style="flex:1">
+                                <h2 style="margin:0 0 6px">Report #RP-2026-00123</h2>
+                                <div class="report-meta">Reported by: Jane Doe · 2026-02-07 · Address: 123 Oak St</div>
+                                <div style="margin-top:10px">Category: Landscaping • Priority: <span class="status" style="background:#fffbeb;color:#92400e">Medium</span></div>
+                            </div>
+                            <div style="text-align:right">
+                                <div class="report-meta">Status</div>
+                                <div class="status" style="background:#ecfbef;color:#05603a">Open</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:12px;color:#111827">
+                            <strong>Summary</strong>
+                            <p style="margin:6px 0 0;color:var(--muted)">Overgrown front lawn with debris obstructing sidewalk. Requesting maintenance and cleanup.</p>
+                        </div>
+
+                        <div class="images">
+                            <img src="/uploads/26599bed239fee5f4ac5389a5a492496" alt="photo1">
+                            <img src="/uploads/2ef524fae97079ba6e2f1cc23be9e022" alt="photo2">
+                        </div>
+
+                        <div style="margin-top:12px">
+                            <strong>Related data</strong>
+                            <table>
+                                <thead><tr><th>ID</th><th>Type</th><th>Date</th><th>Assignee</th></tr></thead>
+                                <tbody>
+                                    <tr><td>RP-2026-00123</td><td>Landscaping</td><td>2026-02-07</td><td>Unassigned</td></tr>
+                                    <tr><td>RP-2026-00098</td><td>Trash</td><td>2026-01-30</td><td>Grounds</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- Actions / moderation panel -->
+                    <aside class="card actions">
+                        <h3>Moderator Actions</h3>
+                        <div class="field">
+                            <label for="comment">Add comment / instructions</label>
+                            <textarea id="comment" placeholder="Write what to do, include assignee, deadline, or close summary"></textarea>
+                        </div>
+
+                        <div class="field">
+                            <label for="action">Action</label>
+                            <select id="action">
+                                <option>Save comment</option>
+                                <option>Close case</option>
+                                <option>Redirect to group</option>
+                                <option>Assign to staff</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="group">Redirect / Group</label>
+                            <select id="group">
+                                <option>— select —</option>
+                                <option>Grounds / Landscaping</option>
+                                <option>Plumbing</option>
+                                <option>Electrical</option>
+                                <option>Security</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="assignee">Assignee (optional)</label>
+                            <input id="assignee" placeholder="Name or team">
+                        </div>
+
+                        <div class="field">
+                            <label for="tags">Tags</label>
+                            <input id="tags" placeholder="e.g. urgent, sidewalk, vegetation">
+                        </div>
+
+                        <div class="btns">
+                            <button class="btn primary">Save</button>
+                            <button class="btn ghost">Preview</button>
+                            <button class="btn warn">Close case</button>
+                        </div>
+                    </aside>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin:0 0 8px">Reports Table (sample)</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Report</th><th>Category</th><th>Reported</th><th>Status</th><th>Assignee</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>RP-2026-00123</td><td>Landscaping</td><td>2026-02-07</td><td>Open</td><td>—</td></tr>
+                            <tr><td>RP-2026-00111</td><td>Lighting</td><td>2026-02-03</td><td>Assigned</td><td>Electrical</td></tr>
+                            <tr><td>RP-2026-00098</td><td>Trash</td><td>2026-01-30</td><td>Closed</td><td>Grounds</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="admin.js"></script>
+</body>
 </html>

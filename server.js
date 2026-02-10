@@ -46,7 +46,70 @@ app.get("/auth", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "auth.html"));
 });
 
-// Request Endpoints
+
+
+//GET Request Endpoints
+app.get("/getComplaints", async (req, res) => {
+    const { data, error } = await supabase
+        .from('User_Reports')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+    if (error) {
+        console.log('Error fetching complaints:', error);
+        return res.json({ success: false, message: error.message });
+    }
+    //now find the users first name through the foreign key user_id
+    const userIds = data.map(complaint => complaint.user_id);
+    const { data: userData, error: userError } = await supabase
+        .from('User_Details')
+        .select('id, full_name')
+        .in('id', userIds);
+    if (userError) {
+        console.log('Error fetching user details:', userError);
+        return res.json({ success: false, message: userError.message });
+    }
+    const userMap = {}; 
+    userData.forEach(user => {
+        userMap[user.id] = user.full_name;
+    }
+    );
+    const complaintsWithNames = data.map(complaint => ({
+        ...complaint,
+        homeowner_name: userMap[complaint.user_id] || 'Unknown'
+    }));
+    res.json({ success: true, complaints: complaintsWithNames });
+});
+
+app.get("/getRecentComplaints", async (req, res) => {
+
+    const email = req.query.email;
+    console.log('Fetching recent complaints for email:', email);
+    const { data: userData, error: userError } = await supabase
+        .from('User_Details')
+        .select('id')
+        .eq('email', email)
+        .single();
+    if (userError) {
+        console.log('Error fetching user details:', userError);
+        return res.json({ success: false, message: userError.message });
+    }
+    console.log('Found user data:', userData);
+    const userId = userData.id;
+    const { data, error } = await supabase
+        .from('User_Reports')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(5);
+    if (error) {
+        console.log('Error fetching recent complaints:', error);
+        return res.json({ success: false, message: error.message });
+    }
+    res.json({ success: true, complaints: data });
+
+});
+// POST Request Endpoints
 app.post("/signin", async (req, res) => {
     const { email, password } = req.body;
 

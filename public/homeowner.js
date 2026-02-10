@@ -6,6 +6,8 @@ const captureBtn = document.getElementById('capture-btn');
 const canvas = document.getElementById('canvasElement');
 const context = canvas.getContext('2d');
 const photoPreview = document.getElementById('photoPreview');
+const complaintsTable = document.getElementById('complaints-table');
+const yourReportsTable = document.getElementById('your-reports-table');
 
 // helper: convert dataURL to Blob so we can send it as a file
 function dataURLtoBlob(dataurl) {
@@ -18,6 +20,48 @@ function dataURLtoBlob(dataurl) {
         u8arr[n] = bstr.charCodeAt(n);
     }
     return new Blob([u8arr], { type: mime });
+}
+
+async function retrieveHundredComplaints() {
+    const response = await fetch('/getComplaints');
+    const data = await response.json();
+    console.log('Retrieved complaints:', data.complaints);
+    // You can further process or display the complaints as needed
+    if (data.complaints && data.complaints.length > 0) {
+        data.complaints.forEach(complaint => {
+            const row = complaintsTable.insertRow();
+            row.insertCell().textContent = complaint.homeowner_name || 'N/A';
+            row.insertCell().textContent = complaint.description || 'N/A';
+            row.insertCell().textContent = complaint.created_at || 'N/A';
+            row.insertCell().textContent = complaint.status || 'N/A';
+            row.insertCell().textContent = complaint.longitude + ', ' + complaint.latitude || 'N/A';
+        });
+    }
+}
+
+async function viewRecentComplaints() {
+    //retrieve recent complaints limited to five for the user based on email stored in sessionStorage
+    const email = sessionStorage.getItem('email');
+    console.log('Retrieved email from sessionStorage for recent complaints:', email);
+
+    const response = await fetch(`/getRecentComplaints?email=${encodeURIComponent(email)}`);
+    const data = await response.json();
+    console.log('Retrieved recent complaints:', data.complaints);
+    // Process or display recent complaints as needed
+    if (data.complaints && data.complaints.length > 0) {
+        data.complaints.forEach(complaint => {
+            const row = yourReportsTable.insertRow();
+            row.insertCell().textContent = complaint.description || 'N/A';
+            row.insertCell().textContent = complaint.created_at || 'N/A';
+            row.insertCell().textContent = complaint.status || 'N/A';
+        });
+    } else {
+        const yourReportsDiv = document.getElementById('your-reports');
+        const noReportsMsg = document.createElement('p');
+        noReportsMsg.textContent = 'You have not submitted any complaints yet.';
+        yourReportsDiv.appendChild(noReportsMsg);
+        yourReportsTable.style.display = 'none';
+    }
 }
 
 
@@ -51,6 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Retrieved email from sessionStorage:', email);
     if (email) {
         document.getElementById('logged-in-as').innerHTML = `${email} | Logged in as Homeowner`;
+        retrieveHundredComplaints();
+        viewRecentComplaints();
     }
     else {
         window.location.href = '/auth';

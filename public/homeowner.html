@@ -1,87 +1,351 @@
-<html>
+<!doctype html>
+<html lang="en">
 
 <head>
-    <title>Homeowner Page</title>
-    <link rel="stylesheet" type="text/css" href="styles.css">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Homeowner — Community Reports</title>
+    <style>
+        :root {
+            --bg: #f7fbff;
+            --card: #ffffff;
+            --muted: #6b7280;
+            --accent: #0ea5e9;
+            --radius: 10px;
+            --max-w: 1100px;
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            background: linear-gradient(180deg, var(--bg), #eef6fb);
+            color: #0f172a
+        }
+
+        .wrap {
+            max-width: var(--max-w);
+            margin: 28px auto;
+            padding: 16px
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 20px
+        }
+
+        header .meta {
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        nav.navbar {
+            background: var(--card);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 6px 18px rgba(2, 6, 23, 0.06);
+            display: flex;
+            gap: 12px;
+            align-items: center
+        }
+
+        nav.navbar a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600
+        }
+
+        nav.navbar #logged-in-as {
+            margin-left: auto;
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 16px;
+            margin-top: 16px
+        }
+
+        .card {
+            background: var(--card);
+            padding: 14px;
+            border-radius: var(--radius);
+            box-shadow: 0 8px 22px rgba(2, 6, 23, 0.06)
+        }
+
+        .complaints-section h2 {
+            margin: 0 0 12px
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            text-align: left;
+            font-size: 14px
+        }
+
+        th {
+            color: var(--muted);
+            font-weight: 600
+        }
+
+        #add-complaint-btn {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            cursor: pointer
+        }
+
+        /* Dialog / form layout */
+        dialog.dialog-box {
+            width: min(900px, 95%);
+            border: none;
+            border-radius: 12px;
+            padding: 0;
+            overflow-y: auto;
+        }
+
+        .dialog-inner {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 12px
+        }
+
+        .dialog-inner .left {
+            padding: 16px
+        }
+
+        .dialog-inner .right {
+            background: #fbfdff;
+            padding: 16px
+        }
+
+        #map {
+            height: 220px;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #e6f0fb, #f8fbff);
+            margin-bottom: 12px
+        }
+
+        .container-webcam {
+            display: flex;
+            flex-direction: column;
+            gap: 8px
+        }
+
+        #webcam {
+            width: 100%;
+            height: 200px;
+            background: #000;
+            border-radius: 8px;
+            object-fit: cover
+        }
+
+        #photoPreview {
+            max-width: 100%;
+            border-radius: 8px;
+            border: 1px solid #e6eefc
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px
+        }
+
+        textarea,
+        select,
+        input[type="date"] {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #e6eefc;
+            font-size: 14px
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 10px
+        }
+
+        .btn {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer
+        }
+
+        .btn.primary {
+            background: var(--accent);
+            color: white
+        }
+
+        .btn.ghost {
+            background: transparent;
+            border: 1px solid #e6eefc
+        }
+
+        @media (max-width:960px) {
+            .board {
+                grid-template-columns: 1fr
+            }
+
+            .dialog-inner {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
 </head>
 
 <body>
-    <!--Homeowners can see complaints made by others in the community and also create new complaints.
-        -->
-    <nav class="navbar">
-        <a href="/homeowner">Homeowner Page</a> |
-        <a href="/index">Home Page</a>
-        <p id="logged-in-as"> | Logged in as Homeowner </p>
-    </nav>
-    <h1>Welcome, <span>Homeowner</span>!</h1>
-    <section class="complaints-section">
-        <h2>Community Complaints</h2>
-        <div id="complaints-list">
-            <!-- sample data -->
-            <table>
-                <tr>
-                    <th>Complaint ID</th>
-                    <th>Homeowner Name</th>
-                    <th>Complaint Text</th>
-                    <th>Date Submitted</th>
-                    <th>Severity</th>
-                    <th>Status</th>
-                </tr>
-            </table>
+    <div class="wrap">
+        <header>
+            <div>
+                <h1>Community Complaints</h1>
+                <div class="meta">See issues and submit new complaints for your community</div>
+            </div>
+            <div class="meta">Welcome, Homeowner</div>
+        </header>
+
+        <nav class="navbar" aria-label="main navigation">
+            <a href="/homeowner">Homeowner Page</a>
+            <a href="/index">Home Page</a>
+            <p id="logged-in-as"> | Logged in as Homeowner </p>
+        </nav>
+
+        <div class="board">
+            <section class="card complaints-section">
+                <h2>Community Complaints</h2>
+                <div id="complaints-list" style="overflow-y:auto; max-height: 200px;">
+                    <table id="complaints-table">
+                        <thead>
+                            <tr>
+                                <th>Homeowner Name</th>
+                                <th>Description</th>
+                                <th>Date Submitted</th>
+                                <th>Status</th>
+                                <th>Location</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- rows populated by homeowner.js -->
+                        </tbody>
+                    </table>
+                </div>
+                <button class="button" id="add-complaint-btn">Add New Complaint</button>
+
+                <dialog class="dialog-box" id="complaint-dialog">
+                    <div class="dialog-inner">
+                        <div class="left">
+                            <h3 style="margin:0 0 8px">Submit a New Complaint</h3>
+                            <div id="map"></div>
+
+                            <form id="complaint-form" action="/submitComplaint" method="POST"
+                                enctype="multipart/form-data">
+                                <div class="container-webcam">
+                                    <video id="webcam" autoplay></video>
+                                    <button type="button" id="capture-btn" class="btn ghost">Capture Photo</button>
+                                    <canvas id="canvasElement" style="display:none"></canvas>
+                                    <img id="photoPreview" name="cameraImage" style="display:none" alt="captured photo">
+                                </div>
+
+                                <div style="margin-top:12px">
+                                    <label for="uploadImageInput">Or Upload an Image</label>
+                                    <input type="file" id="uploadImageInput" name="images" accept="image/*" multiple>
+                                </div>
+
+                                <div style="margin-top:12px">
+                                    <label for="complaint-textarea">Complaint Description</label>
+                                    <textarea id="complaint-textarea" name="description" rows="6"></textarea>
+                                </div>
+
+                                <div style="display:flex;gap:8px;margin-top:8px">
+                                    <div style="flex:1">
+                                        <label for="complaint-type">Category</label>
+                                        <select id="complaint-type" name="type">
+                                            <option>Litter</option>
+                                            <option>Landscaping</option>
+                                            <option>Signage</option>
+                                            <option>Pathways</option>
+                                            <option>Lighting</option>
+                                            <option>Noise</option>
+                                            <option>Other</option>
+                                        </select>
+                                    </div>
+                                    <div style="width:160px">
+                                        <label for="complaint-date">Date</label>
+                                        <input type="date" id="complaint-date" name="date">
+                                    </div>
+                                </div>
+
+                                <div id="submit-container" class="form-actions">
+                                    <button type="submit" class="btn primary">Submit Complaint</button>
+                                    <button type="button" class="btn ghost" id="close-dialog">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <aside class="right">
+                            <h4 style="margin:0 0 8px">Tips for a good report</h4>
+                            <ul style="margin:0;padding-left:18px;color:var(--muted)">
+                                <li>Include clear photos</li>
+                                <li>Specify the exact location</li>
+                                <li>Be concise in the description</li>
+                            </ul>
+                        </aside>
+                    </div>
+                </dialog>
+            </section>
+
+            <aside class="card" style="min-height:120px">
+                <h3 style="margin-top:0">Your recent reports</h3>
+                <div id="your-reports" style="color:var(--muted);font-size:14px">
+                    <table id="your-reports-table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Date Submitted</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- rows populated by homeowner.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </aside>
         </div>
-        <button class="button" id="add-complaint-btn">Add New Complaint</button>
-        <dialog class="dialog-box" id="complaint-dialog">
-            <h3>Submit a New Complaint</h3>
+    </div>
 
-            <div id="map"></div>
-            <form id="complaint-form" action="/submitComplaint" method="POST" enctype="multipart/form-data">
-                <div class="complaint-section">
-                    <div>
-                        <div class="container-webcam">
-                            <video id="webcam" autoplay></video>
-                            <button type="button" id="capture-btn">Capture Photo</button>
-                            <canvas id="canvasElement" style="display: none;"></canvas>
-                            <img id="photoPreview" name="cameraImage" style="display: none;">
-                        </div>
-                        <div>
-                            <label for="uploadImageInput">Or Upload an Image:</label>
-                            <input type="file" id="uploadImageInput" name="images" accept="image/*" multiple>
-                        </div>
-                    </div>
-
-
-                    <div class="container">
-                        <label for="complaint-textarea">Complaint Description:</label>
-                        <textarea id="complaint-textarea" rows="6"></textarea>
-
-                        <select id="complaint-type">
-                            <option>Litter</option>
-                            <option>Landscaping</option>
-                            <option>Signage</option>
-                            <option>Pathways</option>
-                            <option>Lighting</option>
-                            <option>Noise</option>
-                            <option>Other</option>
-                        </select>
-
-                        <input type="date" id="complaint-date">
-                    </div>
-                </div>
-                <div id="submit-container">
-                    <button type="submit" class="button">Submit Complaint</button>
-                </div>
-            </form>
-        </dialog>
-
-    </section>
-
-
-
-    </dialog>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCbcZ3W5eN9r38ZKYOg1GdOT79ymH4gtm8"></script>
-
     <script src="homeowner.js"></script>
 </body>
 
