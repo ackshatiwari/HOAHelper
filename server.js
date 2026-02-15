@@ -109,6 +109,51 @@ app.get("/getRecentComplaints", async (req, res) => {
     res.json({ success: true, complaints: data });
 
 });
+
+//Get Endpoints Admin.html
+app.get("/api/reports", async (req, res) => {
+    const { data, error } = await supabase
+        .from('User_Reports')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+    if (error) {
+        console.log('Error fetching reports:', error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+    return res.status(200).json({ success: true, reports: data });
+});
+
+
+app.get("/api/users/:id", async (req, res) => {
+    const userId = req.params.id;
+    console.log('Fetching user details for user ID:', userId);
+    const { data, error } = await supabase
+        .from('User_Details')
+        .select('*')
+        .eq('id', userId)
+        .single();
+    if (error) {
+        console.log('Error fetching user details for user ID', userId, ':', error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+    console.log('Fetched user details for user ID', userId, ':', data);
+    return res.status(200).json({ success: true, name: data.full_name, address: data.home_address });
+});
+
+app.get("/api/images/:userId", async (req, res) => {
+    const userId = req.params.userId;
+    console.log('Fetching images for user ID:', userId);
+    const bucketName = 'Report_Images';
+    try {
+
+        
+    } catch (error) {
+        console.error('Error fetching images for user ID', userId, ':', error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // POST Request Endpoints
 app.post("/signin", async (req, res) => {
     const { email, password } = req.body;
@@ -122,7 +167,19 @@ app.post("/signin", async (req, res) => {
         return res.json({ success: false, message: error.message });
     }
     console.log('User signed in:', data.user);
-    return res.json({ success: true, user: data.user });
+
+    //redirect based on role
+    const { data: userDetails, error: detailsError } = await supabase
+        .from('User_Details')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+    if (detailsError) {
+        console.log('Error fetching user details:', detailsError);
+        return res.json({ success: false, message: detailsError.message });
+    }
+    console.log('User details:', userDetails);
+    return res.json({ success: true, user: data.user, role: userDetails.role, redirectedWebpage: userDetails.role === 'admin' ? '/admin' : '/homeowner' });
 
 });
 
@@ -277,6 +334,8 @@ app.post("/submitComplaint", upload.array('images', 5), async (req, res) => {
 
     res.json({ success: true })
 });
+
+
 
 
 app.listen(port, () => {

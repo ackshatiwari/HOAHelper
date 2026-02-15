@@ -22,24 +22,57 @@ signInForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value
     const password = document.getElementById('password').value;
-    
-    fetch('/signin', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-        headers: {
-            'Content-Type': 'application/json'
+    /*
+    try {
+        const res = fetch('/signin', {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        const data = JSON.stringify(res.json());
+        if (!res.ok) {
+            throw new Error(data.message || 'Sign in failed');
         }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+        if (res.ok) {
             sessionStorage.clear();
             sessionStorage.setItem('email', email);
-            window.location.href = '/homeowner';
-        } else {
-            alert('Sign in failed');
+            console.log('Sign in successful, redirecting to:', res.redirectedWebpage);
+            window.location.href = res.redirectedWebpage || '/homeowner';
         }
-    });
+
+    } catch (error) {
+        console.error('Error during sign in:', error);
+    }
+        */
+
+    try {
+        fetch('/signin', {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    sessionStorage.clear();
+                    sessionStorage.setItem('email', email);
+                    console.log('Sign in successful, redirecting to:', data.redirectedWebpage);
+                    window.location.href = data.redirectedWebpage || '/homeowner';
+                } else {
+                    alert(data.message || 'Sign in failed');
+                }
+            })
+    } catch (error) {
+        console.error('Error during sign in:', error);
+    }
+
+
+
+
 });
 signUpForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -60,15 +93,15 @@ signUpForm.addEventListener('submit', (e) => {
             'Content-Type': 'application/json'
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            sessionStorage.clear();
-            sessionStorage.setItem('email', email);
-            window.location.href = '/homeowner';
-        } else {
-            alert('Sign up failed');
-        }
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                sessionStorage.clear();
+                sessionStorage.setItem('email', email);
+                window.location.href = '/homeowner';
+            } else {
+                alert('Sign up failed');
+            }
+        });
 });
 
