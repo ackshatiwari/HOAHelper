@@ -69,7 +69,7 @@ app.get("/getComplaints", async (req, res) => {
         console.log('Error fetching user details:', userError);
         return res.json({ success: false, message: userError.message });
     }
-    const userMap = {}; 
+    const userMap = {};
     userData.forEach(user => {
         userMap[user.id] = user.full_name;
     }
@@ -141,13 +141,29 @@ app.get("/api/users/:id", async (req, res) => {
     return res.status(200).json({ success: true, name: data.full_name, address: data.home_address });
 });
 
-app.get("/api/images/:userId", async (req, res) => {
+app.get("/api/images/:userId&:reportId", async (req, res) => {
     const userId = req.params.userId;
-    console.log('Fetching images for user ID:', userId);
+    const reportId = req.params.reportId;
+    console.log('Received request for images with user ID:', userId, 'and report ID:', reportId);
+    console.log('Fetching images for user ID:', userId, 'and report ID:', reportId);
     const bucketName = 'Report_Images';
     try {
+        const { data: listData, error: listError } = await supabase
+            .storage
+            .from(bucketName)
+            .list(`${userId}/${reportId}/`, { limit: 100, offset: 0, sortBy: { column: 'name', order: 'asc' } });
+        if (listError) {
+            console.log('Error listing images for user ID', userId, 'and report ID', reportId, ':', listError);
+            return res.status(500).json({ success: false, message: listError.message });
+        }
+        const imageUrls = listData.map(file => {
+            const { data: pub } = supabase.storage.from(bucketName).getPublicUrl(`${userId}/${reportId}/${file.name}`);
+            return pub.publicUrl;
+        });
+        console.log('Fetched image URLs for user ID', userId, 'and report ID', reportId, ':', imageUrls);
+        return res.status(200).json({ success: true, images: imageUrls });
 
-        
+
     } catch (error) {
         console.error('Error fetching images for user ID', userId, ':', error);
         return res.status(500).json({ success: false, message: error.message });
@@ -243,6 +259,7 @@ app.post("/submitComplaint", upload.array('images', 5), async (req, res) => {
     const bucketName = 'Report_Images';
     const form = req.body || {};
     const images = req.files || [];
+    const reportId = crypto.randomUUID(); // Generate a unique ID for this report to use in storage path
 
     console.log('req.body:', req.body);
     console.log('req.files (images):', req.files);
@@ -289,29 +306,21 @@ app.post("/submitComplaint", upload.array('images', 5), async (req, res) => {
     const uploadedUrls = [];
     if (userId && images.length) {
         console.log("Ready for uploading files for userId:", userId, "Number of files:", images.length);
-        for (const file of images) {
-            try {
-                console.log("Processing file:", file.originalname);
-                const safeName = (file.originalname || 'upload').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, '');
-                const filename = `${Date.now()}-${complaintDate}-${safeName}`;
-                const objectPath = `${userId}/${filename}`;
-
-                const storageClient = supabase;
-                const { data: uploadData, error: uploadError } = await storageClient.storage
-                    .from(bucketName)
-                    .upload(objectPath, file.buffer, { contentType: file.mimetype, upsert: false });
-
-                if (uploadError) {
-                    console.error('Upload error for', file.originalname, uploadError);
-                    continue;
-                }
-
-                const { data: publicData } = supabase.storage.from(bucketName).getPublicUrl(objectPath);
-                if (publicData && publicData.publicUrl) uploadedUrls.push(publicData.publicUrl);
-            } catch (err) {
-                console.error('Error uploading file:', err);
+        for (const file of req.files || []) {
+            const safeName = (file.originalname || 'file').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, '');
+            const key = `${userId}/${reportId}/${Date.now()}-${safeName}`;
+            const { error: upErr } = await supabase.storage.from(bucketName).upload(key, file.buffer, {
+                contentType: file.mimetype,
+                upsert: false
+            });
+            if (upErr) {
+                console.warn('Upload failed for', file.originalname, upErr);
+                continue;
             }
+            const { data: pub } = supabase.storage.from(bucketName).getPublicUrl(key);
+            if (pub?.publicUrl) uploadedUrls.push(pub.publicUrl);
         }
+
     }
 
     const { data, error } = await supabase
@@ -324,7 +333,9 @@ app.post("/submitComplaint", upload.array('images', 5), async (req, res) => {
             longitude: longitude,
             complaint_date: complaintDate,
             image_urls: uploadedUrls,
-            user_id: userId
+            user_id: userId,
+            report_id: reportId
+
         }]);
     if (error) {
         console.log('Error inserting complaint:', error);

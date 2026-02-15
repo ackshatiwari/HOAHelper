@@ -52,20 +52,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     //Fetch the images for each report
+    /*
     for (let user of userDetailsForEachReport) {
         try {
-            const response = await fetch(`/api/images/${user.user_id}`);
+            // Fetch images for the user by passing in user id and report id to the API endpoint
+            console.log('Fetching images for user ID:', user.user_id, 'and report ID:', reports[0].report_id);
+            const response = await fetch(`/api/images?userId=${user.user_id}&reportId=${report.report_id}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
             const images = await response.json();
-            console.log('Fetched images for user:', user.user_id, images);
-            user.images = images;
+            console.log('Fetched images for user:', user.user_id, images.images);
+            
+            user.images = images.images;
         } catch (error) {
             console.error(`Error fetching images for user ${user.user_id}:`, error);
-            user.images = []; // Fallback in case of error
+            user.images = []; 
         }
     }
+        */
 
     renderReportsTable(reports, userDetailsForEachReport);
 
@@ -81,6 +86,38 @@ function renderReportDetails(report, userDetails) {
     $id('report-category').textContent = `Category: ${report.category}`;
     $id('status').textContent = report.status;
     $id('complaint-summary').textContent = report.description;
+
+
+    //get images for the report and display them in the images div
+    fetch(`/api/images/${report.user_id}&${report.report_id}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Fetched images for report:', report.report_id, data.images);
+            userDetails.images = data.images; 
+            const imgDiv = $id('report-images');
+            imgDiv.innerHTML = ''; 
+            if (userDetails.images && userDetails.images.length > 0) {
+                userDetails.images.forEach((imgUrl, index) => {
+                    const img = document.createElement('img');
+                    img.src = imgUrl;
+                    img.alt = `Report image ${index + 1}`;
+                    imgDiv.appendChild(img);
+                });
+            } else {
+                imgDiv.textContent = 'No images available for this report.';
+            }
+        })
+        .catch(error => {
+            console.error(`Error fetching images for report ${report.report_id}:`, error);
+            userDetails.images = []; // Fallback to empty array if there's an error
+        });
+
+
 }
 
 
