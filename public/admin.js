@@ -4,6 +4,25 @@
 // small helper
 const $id = (id) => document.getElementById(id);
 
+// Toast helper: shows a short notification in the bottom-right
+function showToast(message, type = 'success', duration = 3500) {
+    const container = $id('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + (type === 'error' ? 'error' : 'success');
+    toast.innerHTML = `<div class="msg">${message}</div><button class="close-btn" aria-label="Dismiss">&times;</button>`;
+    const closeBtn = toast.querySelector('.close-btn');
+    let removeTimer = null;
+    const removeToast = () => {
+        toast.style.animation = 'toast-out 200ms ease forwards';
+        setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 220);
+        if (removeTimer) clearTimeout(removeTimer);
+    };
+    closeBtn.addEventListener('click', removeToast);
+    container.appendChild(toast);
+    removeTimer = setTimeout(removeToast, duration);
+}
+
 // Search / filters
 const searchInput = $id('q');
 const filterButtons = Array.from(document.querySelectorAll('.filter-btn'));
@@ -51,32 +70,63 @@ document.addEventListener('DOMContentLoaded', async () => {
         report.homeowner_name = userDetailsForEachReport[index].name;
     });
 
-    //Fetch the images for each report
-    /*
-    for (let user of userDetailsForEachReport) {
-        try {
-            // Fetch images for the user by passing in user id and report id to the API endpoint
-            console.log('Fetching images for user ID:', user.user_id, 'and report ID:', reports[0].report_id);
-            const response = await fetch(`/api/images?userId=${user.user_id}&reportId=${report.report_id}`);
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const images = await response.json();
-            console.log('Fetched images for user:', user.user_id, images.images);
-            
-            user.images = images.images;
-        } catch (error) {
-            console.error(`Error fetching images for user ${user.user_id}:`, error);
-            user.images = []; 
-        }
-    }
-        */
-
     renderReportsTable(reports, userDetailsForEachReport);
 
 
-
 });
+
+
+saveButton.addEventListener('click', async () => {
+    const selectedAction = actionSelect.value;
+    let reportId = '';
+    if ($id('report-header')) {
+        reportId = $id('report-header').textContent.split('#RP-')[1].trim();
+        console.log(reportId);
+    } else {
+        console.error('Report header element not found. Cannot determine report ID.');
+        showToast('Unable to determine report ID', 'error');
+        return;
+    }
+
+    try {
+        if (selectedAction === 'save') {
+            console.log('Saving comment:', commentTextarea.value);
+            console.log('Report ID for saving comment:', reportId);
+            const res = await fetch(`/api/admin/comment/${reportId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ comment: commentTextarea.value })
+            });
+            if (res.ok) {
+                showToast('Comment saved', 'success');
+            } else {
+                showToast('Failed to save comment', 'error');
+            }
+
+        } else if (selectedAction === 'close') {
+            console.log('Closing case with comment:', commentTextarea.value);
+            console.log('Report ID for closing case:', reportId);
+            const res = await fetch(`/api/admin/close/${reportId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ comment: commentTextarea.value })
+            });
+            if (res.ok) {
+                showToast('Case closed', 'success');
+            } else {
+                showToast('Failed to close case', 'error');
+            }
+
+        } else if (selectedAction === 'redirect') {
+            // Optionally implement redirect feedback
+            showToast('Redirect action queued', 'success');
+        }
+    } catch (err) {
+        console.error('Action failed:', err);
+        showToast('Network error — try again', 'error');
+    }
+});
+
 
 function renderReportDetails(report, userDetails) {
     console.log("User details for report:", userDetails);
@@ -85,6 +135,10 @@ function renderReportDetails(report, userDetails) {
     $id('report-author-details').textContent = `Reported by: ${userDetails.name} · ${new Date(report.complaint_date).toLocaleDateString()} · Address: ${userDetails.address}`;
     $id('report-category').textContent = `Category: ${report.category}`;
     $id('status').textContent = report.status;
+    if (report.status === 'unresolved') { $id('status').style.backgroundColor = '#f44336'; $id('status').style.color = 'white'; }
+    else if (report.status === 'in progress') $id('status').style.backgroundColor = '#ff9800';
+    else if (report.status === 'resolved') $id('status').style.backgroundColor = '#4caf50';
+    else if (report.status === 'closed') $id('status').style.backgroundColor = '#9e9e9e';
     $id('complaint-summary').textContent = report.description;
 
 
@@ -98,9 +152,9 @@ function renderReportDetails(report, userDetails) {
         })
         .then(data => {
             console.log('Fetched images for report:', report.report_id, data.images);
-            userDetails.images = data.images; 
+            userDetails.images = data.images;
             const imgDiv = $id('report-images');
-            imgDiv.innerHTML = ''; 
+            imgDiv.innerHTML = '';
             if (userDetails.images && userDetails.images.length > 0) {
                 userDetails.images.forEach((imgUrl, index) => {
                     const img = document.createElement('img');

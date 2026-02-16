@@ -249,6 +249,58 @@
             min-height: 500px;
             width: 100%;
         }
+        /* Toast notifications */
+        #toast-container {
+            position: fixed;
+            right: 16px;
+            bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .toast {
+            pointer-events: auto;
+            min-width: 220px;
+            max-width: 360px;
+            background: rgba(17, 24, 39, 0.95);
+            color: white;
+            padding: 10px 12px;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(2,6,23,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            transform: translateY(10px);
+            opacity: 0;
+            animation: toast-in 240ms ease forwards;
+            font-size: 14px;
+        }
+
+        .toast.success { background: #0f5132; }
+        .toast.error { background: #4c0b0b; }
+
+        .toast .close-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255,255,255,0.9);
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        @keyframes toast-in {
+            from { transform: translateY(10px); opacity: 0 }
+            to { transform: translateY(0); opacity: 1 }
+        }
+
+        @keyframes toast-out {
+            from { transform: translateY(0); opacity: 1 }
+            to { transform: translateY(10px); opacity: 0 }
+        }
     </style>
 </head>
 
@@ -338,10 +390,9 @@
                         <div class="field">
                             <label for="action">Action</label>
                             <select id="action">
-                                <option>Save comment</option>
-                                <option>Close case</option>
-                                <option>Redirect to group</option>
-                                <option>Assign to staff</option>
+                                <option value="save">Save comment</option>
+                                <option value="close">Close case</option>
+                                <option value="redirect">Redirect to group</option>
                             </select>
                         </div>
 
@@ -367,9 +418,7 @@
                         </div>
 
                         <div class="btns">
-                            <button class="btn primary">Save</button>
-                            <button class="btn ghost">Preview</button>
-                            <button class="btn warn">Close case</button>
+                            <button class="btn primary" id="apply-mod-actions">Save</button>
                         </div>
                     </aside>
                 </div>
@@ -394,6 +443,7 @@
             </main>
         </div>
     </div>
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
     <script src="admin.js"></script>
 </body>
 

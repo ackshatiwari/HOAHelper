@@ -171,6 +171,8 @@ app.get("/api/images/:userId&:reportId", async (req, res) => {
 });
 
 // POST Request Endpoints
+
+//auth.js
 app.post("/signin", async (req, res) => {
     const { email, password } = req.body;
 
@@ -252,6 +254,8 @@ app.post("/signup", async (req, res) => {
     return res.json({ success: true, user: signInData.user });
 });
 
+
+//homeowner.js
 
 app.post("/submitComplaint", upload.array('images', 5), async (req, res) => {
 
@@ -346,8 +350,69 @@ app.post("/submitComplaint", upload.array('images', 5), async (req, res) => {
     res.json({ success: true })
 });
 
+//admin.js
+app.post('/api/admin/close/:reportId', (req, res) => {
+    const reportId = req.params.reportId;
+    const { comment } = req.body;
+    console.log('Closing report ID:', reportId, 'with comment:', comment);
+
+    const updateReport = async () => {
+        const { data, error } = await supabase
+            .from('User_Reports')
+            .update({ status: 'closed' })
+            .eq('report_id', reportId)
+            .select();
 
 
+
+        const { data: commentInsertData, error: commentInsertError } = await supabase
+            .rpc('append_to_text_array', {
+                new_value: comment,
+                row_id: reportId,
+            });
+
+        if (error) {
+            console.log('Error updating report status:', error);
+            return res.status(500).json({ success: false, message: error.message });
+        }
+        if (commentInsertError) {
+            console.log('Error inserting comment:', commentInsertError);
+            return res.status(500).json({ success: false, message: commentInsertError.message });
+        }
+        console.log('Report status updated to closed for report ID:', data);
+        console.log('Comment appended to report ID:', commentInsertData);
+
+
+
+        console.log('Report updated to closed:', data);
+        return res.status(200).json({ success: true });
+    };
+
+    updateReport();
+});
+
+app.post('/api/admin/comment/:reportId', (req, res) => {
+    const reportId = req.params.reportId;
+    const { comment } = req.body;
+    console.log('Adding comment to report ID:', reportId, 'Comment:', comment);
+
+    const insertComment = async () => {
+        const { data, error } = await supabase
+            .rpc('append_to_text_array', {
+                new_value: comment,
+                row_id: reportId,
+            });
+
+        if (error) {
+            console.log('Error inserting comment:', error);
+            return res.status(500).json({ success: false, message: error.message });
+        }
+        console.log('Comment inserted:', data);
+        return res.status(200).json({ success: true });
+    };
+
+    insertComment();
+});
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
