@@ -416,6 +416,26 @@ app.post('/api/admin/comment/:reportId', (req, res) => {
     insertComment();
 });
 
+app.get('/api/admin/listStaff/:group', (req, res) => {
+    const group = req.params.group;
+    console.log('Fetching staff for group:', group);
+    const fetchStaff = async () => {
+        const { data, error } = await supabase
+            .from('User_Details')
+            .select('full_name, email')
+            .ilike('role', `%${group}%`);
+
+        if (error) {
+            console.log('Error fetching staff details:', error);
+            return res.status(500).json({ success: false, message: error.message });
+        }
+        console.log('Fetched staff details:', data);
+        return res.status(200).json({ success: true, data });
+    };
+
+    fetchStaff();
+});
+
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });

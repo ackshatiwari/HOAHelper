@@ -16,6 +16,8 @@ const actionSelect = $id('action');
 const groupSelect = $id('group');
 const assigneeInput = $id('assignee');
 const tagsInput = $id('tags');
+const staffTable = $id('staffTable');
+const staffTableBody = staffTable.querySelector('tbody');
 
 // Action buttons (first match for each style)
 const saveButton = document.querySelector('.btn.primary');
@@ -35,9 +37,6 @@ const allReportsBtn = $id('all-reports-btn');
 const openBtn = $id('open-btn');
 const closedBtn = $id('closed-btn');
 const redirectedBtn = $id('redirected-btn');
-
-
-
 
 
 
@@ -151,16 +150,16 @@ openBtn.addEventListener('click', async () => {
         }
     }
     renderReportsTable(filteredReports, userDetailsForEachReport);
-        // Make the button that is clicked have like a dark green border and slight green background, and remove that styling from the other buttons
-        openBtn.style.border = '2px solid #4caf50';
-        openBtn.style.backgroundColor = '#e8f5e9';
+    // Make the button that is clicked have like a dark green border and slight green background, and remove that styling from the other buttons
+    openBtn.style.border = '2px solid #4caf50';
+    openBtn.style.backgroundColor = '#e8f5e9';
 
-        allReportsBtn.style.border = '1px solid #ccc';
-        allReportsBtn.style.backgroundColor = '';
-        closedBtn.style.border = '1px solid #ccc';
-        closedBtn.style.backgroundColor = '';
-        redirectedBtn.style.border = '1px solid #ccc';
-        redirectedBtn.style.backgroundColor = '';
+    allReportsBtn.style.border = '1px solid #ccc';
+    allReportsBtn.style.backgroundColor = '';
+    closedBtn.style.border = '1px solid #ccc';
+    closedBtn.style.backgroundColor = '';
+    redirectedBtn.style.border = '1px solid #ccc';
+    redirectedBtn.style.backgroundColor = '';
 });
 
 closedBtn.addEventListener('click', async () => {
@@ -183,34 +182,69 @@ closedBtn.addEventListener('click', async () => {
     }
     renderReportsTable(filteredReports, userDetailsForEachReport);
 
-        // Make the button that is clicked have like a dark green border and slight green background, and remove that styling from the other buttons
-        closedBtn.style.border = '2px solid #4caf50';
-        closedBtn.style.backgroundColor = '#e8f5e9';
+    // Make the button that is clicked have like a dark green border and slight green background, and remove that styling from the other buttons
+    closedBtn.style.border = '2px solid #4caf50';
+    closedBtn.style.backgroundColor = '#e8f5e9';
 
-        allReportsBtn.style.border = '1px solid #ccc';
-        allReportsBtn.style.backgroundColor = '';
-        openBtn.style.border = '1px solid #ccc';
-        openBtn.style.backgroundColor = '';
-        redirectedBtn.style.border = '1px solid #ccc';
-        redirectedBtn.style.backgroundColor = '';
+    allReportsBtn.style.border = '1px solid #ccc';
+    allReportsBtn.style.backgroundColor = '';
+    openBtn.style.border = '1px solid #ccc';
+    openBtn.style.backgroundColor = '';
+    redirectedBtn.style.border = '1px solid #ccc';
+    redirectedBtn.style.backgroundColor = '';
 });
 
 redirectedBtn.addEventListener('click', async () => {
     console.log('Redirected filter clicked');
     //I have not implemented redirected status in the backend yet, so this is just a placeholder for now
     renderReportDetails([], { name: 'N/A', address: 'N/A' });
-        // Make the button that is clicked have like a dark green border and slight green background, and remove that styling from the other buttons
-        redirectedBtn.style.border = '2px solid #4caf50';
-        redirectedBtn.style.backgroundColor = '#e8f5e9';
-        
-        allReportsBtn.style.border = '1px solid #ccc';
-        allReportsBtn.style.backgroundColor = '';
-        openBtn.style.border = '1px solid #ccc';
-        openBtn.style.backgroundColor = '';
-        closedBtn.style.border = '1px solid #ccc';
-        closedBtn.style.backgroundColor = '';
-  
+    // Make the button that is clicked have like a dark green border and slight green background, and remove that styling from the other buttons
+    redirectedBtn.style.border = '2px solid #4caf50';
+    redirectedBtn.style.backgroundColor = '#e8f5e9';
+
+    allReportsBtn.style.border = '1px solid #ccc';
+    allReportsBtn.style.backgroundColor = '';
+    openBtn.style.border = '1px solid #ccc';
+    openBtn.style.backgroundColor = '';
+    closedBtn.style.border = '1px solid #ccc';
+    closedBtn.style.backgroundColor = '';
+
 });
+
+
+
+
+groupSelect.addEventListener('change', async () => {
+    //now prints a table showing the assigne names for each staff group
+    const group = groupSelect.value;
+    console.log('Selected group:', group);
+    try {
+        const response = await fetch(`/api/admin/listStaff/${group}`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const groupDetails = await response.json();
+        console.log('Fetched group details:', groupDetails);
+        staffTable.style.display = 'block';
+        staffTableBody.innerHTML = '';
+        for(let staff of groupDetails.data) {
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>${staff.full_name}</td>
+                <td>${staff.email}</td>
+            `;
+            staffTableBody.appendChild(newRow);
+        }
+    }
+    catch (error) {
+        console.error('Error fetching group details:', error);
+        showToast('Failed to fetch group details', 'error');
+        return;
+    }
+
+
+})
+
 
 
 

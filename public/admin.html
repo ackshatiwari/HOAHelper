@@ -423,20 +423,32 @@
                             <label for="group">Redirect / Group</label>
                             <select id="group">
                                 <option>— select —</option>
-                                <option>Grounds / Landscaping</option>
-                                <option>Plumbing</option>
-                                <option>Electrical</option>
-                                <option>General Maintenance</option>
-                                <option>HVAC</option>
-                                <option>Roofing</option>
-                                <option>Pool Maintenance</option>
+                                <option value="landscaping">Grounds / Landscaping</option>
+                                <option value="plumbing">Plumbing</option>
+                                <option value="electrical">Electrical</option>
+                                <option value="general maintenance">General Maintenance</option>
+                                <option value="hvac">HVAC</option>
+                                <option value="roofing">Roofing</option>
+                                <option value="pool">Pool Maintenance</option>
                             </select>
                         </div>
 
                         <div class="field">
-                            <label for="assignee">Assignee (optional)</label>
-                            <input id="assignee" placeholder="Name or team">
+                            <table id="staffTable" style="display: none;">
+                                <thead>
+                                    <tr>
+                                        <th>Staff Name</th>
+                                        <th>Staff Email</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="staffTable-body">
+                                    <!-- Staff details will be populated here -->
+                                </tbody>
+                            </table>
+
                         </div>
+
+                        
 
                         <div class="field">
                             <label for="tags">Tags</label>
