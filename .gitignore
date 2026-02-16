@@ -1,4 +1,9 @@
 .env
 node_modules/
+
+# Temp files
+*.log
 uploads/
 
+# Google Cloud STT API
+gen-lang-client-0553672861-0164d678f068.json
