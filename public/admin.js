@@ -4,24 +4,7 @@
 // small helper
 const $id = (id) => document.getElementById(id);
 
-// Toast helper: shows a short notification in the bottom-right
-function showToast(message, type = 'success', duration = 3500) {
-    const container = $id('toast-container');
-    if (!container) return;
-    const toast = document.createElement('div');
-    toast.className = 'toast ' + (type === 'error' ? 'error' : 'success');
-    toast.innerHTML = `<div class="msg">${message}</div><button class="close-btn" aria-label="Dismiss">&times;</button>`;
-    const closeBtn = toast.querySelector('.close-btn');
-    let removeTimer = null;
-    const removeToast = () => {
-        toast.style.animation = 'toast-out 200ms ease forwards';
-        setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 220);
-        if (removeTimer) clearTimeout(removeTimer);
-    };
-    closeBtn.addEventListener('click', removeToast);
-    container.appendChild(toast);
-    removeTimer = setTimeout(removeToast, duration);
-}
+
 
 // Search / filters
 const searchInput = $id('q');
@@ -46,11 +29,42 @@ const reportImages = Array.from(document.querySelectorAll('.images img'));
 // Data table
 const reportsTable = $id('reports-table');
 
+
+// Filters
+const allReportsBtn = $id('all-reports-btn');
+const openBtn = $id('open-btn');
+const closedBtn = $id('closed-btn');
+const redirectedBtn = $id('redirected-btn');
+
+
+
+
+
+
+
+
+// Toast helper: shows a short notification in the bottom-right
+function showToast(message, type = 'success', duration = 3500) {
+    const container = $id('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + (type === 'error' ? 'error' : 'success');
+    toast.innerHTML = `<div class="msg">${message}</div><button class="close-btn" aria-label="Dismiss">&times;</button>`;
+    const closeBtn = toast.querySelector('.close-btn');
+    let removeTimer = null;
+    const removeToast = () => {
+        toast.style.animation = 'toast-out 200ms ease forwards';
+        setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 220);
+        if (removeTimer) clearTimeout(removeTimer);
+    };
+    closeBtn.addEventListener('click', removeToast);
+    container.appendChild(toast);
+    removeTimer = setTimeout(removeToast, duration);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
-    // Initial setup can go here if needed
     const reports = await fetchReports();
     console.log(reports[0].user_id);
-    // Fetch user details for each report using forEach
     let userDetailsForEachReport = [];
     for (let report of reports) {
         try {
@@ -74,6 +88,130 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 });
+
+
+// Filters Event Listener
+
+allReportsBtn.addEventListener('click', async () => {
+    // Implement logic to show all reports
+    console.log('All Reports filter clicked');
+    // You can re-render the table with all reports or implement client-side filtering
+    const reports = await fetchReports();
+    console.log(reports[0].user_id);
+    let userDetailsForEachReport = [];
+    for (let report of reports) {
+        try {
+            const response = await fetch(`/api/users/${report.user_id}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const userDetails = await response.json();
+            console.log('Fetched user details for report:', report.report_id, userDetails);
+            userDetailsForEachReport.push(userDetails);
+        } catch (error) {
+            console.error(`Error fetching user details for report ${report.report_id}:`, error);
+            userDetailsForEachReport.push({ name: 'Unknown User' }); // Fallback in case of error
+        }
+    }
+    reports.forEach((report, index) => {
+        report.homeowner_name = userDetailsForEachReport[index].name;
+    });
+
+    renderReportsTable(reports, userDetailsForEachReport);
+
+    // Make the button that is clicked have like a dark green border and slight green background, and remove that styling from the other buttons
+    allReportsBtn.style.border = '2px solid #4caf50';
+    allReportsBtn.style.backgroundColor = '#e8f5e9';
+
+    openBtn.style.border = '1px solid #ccc';
+    openBtn.style.backgroundColor = '';
+    closedBtn.style.border = '1px solid #ccc';
+    closedBtn.style.backgroundColor = '';
+    redirectedBtn.style.border = '1px solid #ccc';
+    redirectedBtn.style.backgroundColor = '';
+});
+
+openBtn.addEventListener('click', async () => {
+    console.log('Open filter clicked');
+    const reports = await fetchReports();
+    const filteredReports = reports.filter(report => report.status === 'unresolved');
+    console.log('Filtered reports:', filteredReports);
+    let userDetailsForEachReport = [];
+    for (let report of filteredReports) {
+        try {
+            const response = await fetch(`/api/users/${report.user_id}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const userDetails = await response.json();
+            userDetailsForEachReport.push(userDetails);
+        } catch (error) {
+            console.error(`Error fetching user details for report ${report.report_id}:`, error);
+            userDetailsForEachReport.push({ name: 'Unknown User' }); // Fallback in case of error
+        }
+    }
+    renderReportsTable(filteredReports, userDetailsForEachReport);
+        // Make the button that is clicked have like a dark green border and slight green background, and remove that styling from the other buttons
+        openBtn.style.border = '2px solid #4caf50';
+        openBtn.style.backgroundColor = '#e8f5e9';
+
+        allReportsBtn.style.border = '1px solid #ccc';
+        allReportsBtn.style.backgroundColor = '';
+        closedBtn.style.border = '1px solid #ccc';
+        closedBtn.style.backgroundColor = '';
+        redirectedBtn.style.border = '1px solid #ccc';
+        redirectedBtn.style.backgroundColor = '';
+});
+
+closedBtn.addEventListener('click', async () => {
+    console.log('Closed filter clicked');
+    const reports = await fetchReports();
+    const filteredReports = reports.filter(report => report.status === 'closed');
+    let userDetailsForEachReport = [];
+    for (let report of filteredReports) {
+        try {
+            const response = await fetch(`/api/users/${report.user_id}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const userDetails = await response.json();
+            userDetailsForEachReport.push(userDetails);
+        } catch (error) {
+            console.error(`Error fetching user details for report ${report.report_id}:`, error);
+            userDetailsForEachReport.push({ name: 'Unknown User' }); // Fallback in case of error
+        }
+    }
+    renderReportsTable(filteredReports, userDetailsForEachReport);
+
+        // Make the button that is clicked have like a dark green border and slight green background, and remove that styling from the other buttons
+        closedBtn.style.border = '2px solid #4caf50';
+        closedBtn.style.backgroundColor = '#e8f5e9';
+
+        allReportsBtn.style.border = '1px solid #ccc';
+        allReportsBtn.style.backgroundColor = '';
+        openBtn.style.border = '1px solid #ccc';
+        openBtn.style.backgroundColor = '';
+        redirectedBtn.style.border = '1px solid #ccc';
+        redirectedBtn.style.backgroundColor = '';
+});
+
+redirectedBtn.addEventListener('click', async () => {
+    console.log('Redirected filter clicked');
+    //I have not implemented redirected status in the backend yet, so this is just a placeholder for now
+    renderReportDetails([], { name: 'N/A', address: 'N/A' });
+        // Make the button that is clicked have like a dark green border and slight green background, and remove that styling from the other buttons
+        redirectedBtn.style.border = '2px solid #4caf50';
+        redirectedBtn.style.backgroundColor = '#e8f5e9';
+        
+        allReportsBtn.style.border = '1px solid #ccc';
+        allReportsBtn.style.backgroundColor = '';
+        openBtn.style.border = '1px solid #ccc';
+        openBtn.style.backgroundColor = '';
+        closedBtn.style.border = '1px solid #ccc';
+        closedBtn.style.backgroundColor = '';
+  
+});
+
 
 
 saveButton.addEventListener('click', async () => {
@@ -129,6 +267,8 @@ saveButton.addEventListener('click', async () => {
 
 
 function renderReportDetails(report, userDetails) {
+
+
     console.log("User details for report:", userDetails);
     console.log('Rendering details for report:', report);
     $id('report-header').textContent = `Report #RP-${report.report_id}`;
@@ -168,7 +308,7 @@ function renderReportDetails(report, userDetails) {
         })
         .catch(error => {
             console.error(`Error fetching images for report ${report.report_id}:`, error);
-            userDetails.images = []; // Fallback to empty array if there's an error
+            userDetails.images = [];
         });
 
 
@@ -192,6 +332,11 @@ async function fetchReports() {
 }
 
 function renderReportsTable(reports, userDetails) {
+    //first clear existing table rows
+    const tbody = reportsTable.querySelector('tbody');
+    tbody.innerHTML = '';
+
+
     if (!reports || reports.length === 0) {
         reportsTable.innerHTML = '<p>No reports found.</p>';
         return;
@@ -201,10 +346,8 @@ function renderReportsTable(reports, userDetails) {
         console.log('Report:', report);
         const newRow = document.createElement('tr');
         newRow.setAttribute('data-report-id', report.report_id);
-        //add click functionality to row to navigate to report detail page
         newRow.addEventListener('click', () => {
             console.log('Navigating to report detail page for report ID:', report.report_id);
-            //render the report details along with the corresponding user details
             renderReportDetails(report, userDetails.find(user => user.name === report.homeowner_name));
         });
         newRow.innerHTML = `

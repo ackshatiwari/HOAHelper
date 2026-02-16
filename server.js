@@ -4,6 +4,7 @@ import path from "path";
 import { supabase } from "./client.js";
 import multer from "multer";
 import crypto from "crypto";
+import speechRouter from "./routes/speech.js";
 
 const app = express();
 const port = 3000;
@@ -14,6 +15,7 @@ const __dirname = path.resolve();
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/speech', speechRouter);
 // use memory storage so we can upload buffers directly to Supabase
 const storage = multer.memoryStorage();
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });

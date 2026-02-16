@@ -8,6 +8,69 @@ const context = canvas.getContext('2d');
 const photoPreview = document.getElementById('photoPreview');
 const complaintsTable = document.getElementById('complaints-table');
 const yourReportsTable = document.getElementById('your-reports-table');
+const audioIcon = document.getElementById('audioIcon');
+const stopIcon = document.getElementById('stopIcon');
+
+let mediaRecorder;
+let audioChunks = [];
+let isRecording = false;
+
+
+
+audioIcon.addEventListener('click', async () => {
+    if (!isRecording) {
+        stopIcon.disabled = false;
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = event => {
+            audioChunks.push(event.data);
+        };
+        mediaRecorder.onstop = async () => {
+
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'recording.webm');
+
+            const response = await fetch('/speech/transcribe', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            console.log('Transcription:', data.transcription);
+            document.getElementById('complaint-textarea').value += " " + data.transcription;
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+
+        console.log("Recording started");
+
+    } else {
+        stopIcon.disabled = true;
+        mediaRecorder.stop();
+        isRecording = false;
+        console.log("Recording stopped");
+
+    }
+
+});
+
+stopIcon.addEventListener('click', () => {
+    if (isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        stopIcon.disabled = true;
+        console.log("Recording stopped by user");
+    }
+});
+
+
 
 // helper: convert dataURL to Blob so we can send it as a file
 function dataURLtoBlob(dataurl) {

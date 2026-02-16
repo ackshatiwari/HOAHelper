@@ -249,6 +249,11 @@
             min-height: 500px;
             width: 100%;
         }
+        #reports-table {
+            overflow-y: auto;
+            max-height: 600px;
+        }
+
         /* Toast notifications */
         #toast-container {
             position: fixed;
@@ -269,7 +274,7 @@
             color: white;
             padding: 10px 12px;
             border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(2,6,23,0.2);
+            box-shadow: 0 8px 24px rgba(2, 6, 23, 0.2);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -280,26 +285,45 @@
             font-size: 14px;
         }
 
-        .toast.success { background: #0f5132; }
-        .toast.error { background: #4c0b0b; }
+        .toast.success {
+            background: #0f5132;
+        }
+
+        .toast.error {
+            background: #4c0b0b;
+        }
 
         .toast .close-btn {
             background: transparent;
             border: none;
-            color: rgba(255,255,255,0.9);
+            color: rgba(255, 255, 255, 0.9);
             cursor: pointer;
             font-size: 16px;
             line-height: 1;
         }
 
         @keyframes toast-in {
-            from { transform: translateY(10px); opacity: 0 }
-            to { transform: translateY(0); opacity: 1 }
+            from {
+                transform: translateY(10px);
+                opacity: 0
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1
+            }
         }
 
         @keyframes toast-out {
-            from { transform: translateY(0); opacity: 1 }
-            to { transform: translateY(10px); opacity: 0 }
+            from {
+                transform: translateY(0);
+                opacity: 1
+            }
+
+            to {
+                transform: translateY(10px);
+                opacity: 0
+            }
         }
     </style>
 </head>
@@ -318,11 +342,10 @@
             <aside class="sidebar">
                 <h2>Filters</h2>
                 <div class="filters">
-                    <button class="filter-btn">All Reports <span class="count">24</span></button>
-                    <button class="filter-btn">Open <span class="count">8</span></button>
-                    <button class="filter-btn">Assigned <span class="count">6</span></button>
-                    <button class="filter-btn">Closed <span class="count">10</span></button>
-                    <button class="filter-btn">Redirected <span class="count">2</span></button>
+                    <button class="filter-btn" id="all-reports-btn">All Reports <span class="count" id="all-reports-count"></span></button>
+                    <button class="filter-btn" id="open-btn">Unresolved <span class="count" id="open-count"></span></button>
+                    <button class="filter-btn" id="closed-btn">Closed <span class="count" id="closed-count"></span></button>
+                    <button class="filter-btn" id="redirected-btn">Redirected <span class="count" id="redirected-count"></span></button>
                 </div>
                 <div class="search">
                     <label for="q">Search reports</label>
@@ -403,7 +426,10 @@
                                 <option>Grounds / Landscaping</option>
                                 <option>Plumbing</option>
                                 <option>Electrical</option>
-                                <option>Security</option>
+                                <option>General Maintenance</option>
+                                <option>HVAC</option>
+                                <option>Roofing</option>
+                                <option>Pool Maintenance</option>
                             </select>
                         </div>
 
@@ -424,7 +450,7 @@
                 </div>
 
                 <div class="card" id="reports-table">
-                    <h3 style="margin:0 0 8px">Reports Table (sample)</h3>
+                    <h3 style="margin:0 0 8px">Reports Table</h3>
                     <table>
                         <thead>
                             <tr>
