@@ -1,19 +1,282 @@
-<html>
+<!doctype html>
+<html lang="en">
 
 <head>
-    <title>Home page</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Community — Welcome</title>
     <link rel="stylesheet" type="text/css" href="styles.css">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="images/logo.png">
+    <style>
+        :root{
+            --bg: #f7fbf8;
+            --card: #ffffff;
+            --muted: #5b6b63;
+            --accent: #0f766e; /* community green */
+            --accent-2: #16a34a;
+            --glass: rgba(255,255,255,0.6);
+            --radius: 12px;
+            --max-w: 1100px;
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+        }
+
+        *{box-sizing:border-box}
+        html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#eef4ff);color:#07122a}
+
+        .wrap{max-width:var(--max-w);margin:28px auto;padding:20px}
+
+        header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+        header .brand{display:flex;align-items:center;gap:12px}
+        header .brand img{height:44px;width:44px;border-radius:8px;object-fit:cover}
+        header h1{margin:0;font-size:20px}
+        header .meta{color:var(--muted);font-size:13px}
+
+        nav.topbar{display:flex;gap:12px;align-items:center}
+        nav.topbar a{color:var(--accent);text-decoration:none;font-weight:600}
+        nav.topbar .spacer{flex:1}
+        .nav-actions{display:flex;gap:8px;align-items:center}
+
+        .hero{display:grid;grid-template-columns:1fr;gap:20px;align-items:center;margin-top:18px}
+        .hero-card{background:var(--card);padding:24px;border-radius:var(--radius);box-shadow:0 12px 30px rgba(2,6,23,0.06)}
+
+        .hero h2{margin:0 0 8px;font-size:28px}
+        .hero p.lead{margin:0 0 16px;color:var(--muted);font-size:15px}
+
+        .cta-row{display:flex;gap:10px}
+        .btn{padding:12px 16px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
+        .btn.primary{background:var(--accent);color:#fff}
+        .btn.ghost{background:transparent;border:1px solid rgba(37,99,235,0.12);color:var(--accent)}
+
+        .features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+        .feature{background:linear-gradient(180deg,#fff,#fbfdff);padding:14px;border-radius:10px;border:1px solid #eef4ff}
+        .feature h4{margin:0 0 6px;font-size:15px}
+        .feature p{margin:0;color:var(--muted);font-size:13px}
+
+        .panel{background:var(--card);padding:18px;border-radius:var(--radius);box-shadow:0 8px 22px rgba(2,6,23,0.06)}
+
+        .quick-stats{display:flex;gap:12px}
+        .stat{flex:1;padding:12px;border-radius:10px;background:linear-gradient(90deg,#fff,#fbfdff);border:1px solid #eef6ff}
+        .stat h3{margin:0;font-size:18px}
+        .stat p{margin:6px 0 0;color:var(--muted);font-size:13px}
+
+        footer{margin-top:24px;color:var(--muted);font-size:13px;text-align:center}
+
+        /* responsive */
+        @media (max-width:940px){
+            .hero{grid-template-columns:1fr}
+            .features{grid-template-columns:1fr 1fr}
+        }
+        @media (max-width:640px){
+            .features{grid-template-columns:1fr}
+            .nav-actions{display:none}
+        }
+
+        /* small utility */
+        .muted{color:var(--muted)}
+        .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#eef6ff;color:var(--accent);font-weight:600}
+
+        /* auth styles merged and tuned for left welcome / right login layout */
+        :root{--brand-green:#4CAF50;--brand-blue:#008CBA}
+        .auth-container{max-width:980px;margin:18px auto;padding:12px;display:flex;gap:28px;align-items:stretch;justify-content:space-between}
+        /* left welcome panel */
+        .auth-hero{flex:1;min-width:240px;max-width:540px;display:flex;flex-direction:column;gap:12px;padding:18px 18px 18px 18px;background:linear-gradient(180deg,rgba(15,118,110,0.03),rgba(14,165,233,0.01));border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.04);align-items:stretch;justify-content:space-between;min-height:320px}
+        .logo-card{width:100%;height:100%;border-radius:10px;background:transparent;padding:0;display:flex;align-items:center;justify-content:center;margin:0;box-shadow:none}
+        .logo-card img{width:100%;max-width:420px;height:auto;display:block;border-radius:8px;object-fit:contain}
+        .auth-hero h3{margin:4px 0 6px;font-size:18px}
+        .auth-hero p{margin:0;color:var(--muted);font-size:14px}
+        .auth-hero ul{margin-top:8px;color:var(--muted);padding-left:16px}
+        .auth-hero ul li{margin-bottom:6px}
+        .hero-text{margin-top:12px}
+        /* right login card */
+        .auth-card{background:var(--card);border-radius:12px;box-shadow:0 8px 32px rgba(12,16,20,0.06);padding:28px;width:420px;align-self:center}
+        .auth-card h2{margin:0 0 12px 0}
+        .pill-toggle{text-align:center;margin-bottom:18px}
+        .pill-toggle button{background:transparent;border:1px solid #e6e9ee;padding:10px 18px;border-radius:999px;margin:0 6px;cursor:pointer;font-weight:600}
+        .pill-toggle button.active{background:var(--brand-blue);color:#fff;border-color:transparent}
+        .auth-form{display:flex;flex-direction:column;gap:10px}
+        .auth-form label{font-size:14px;color:var(--muted)}
+        .auth-form input,.auth-form select{padding:12px;border-radius:8px;border:1px solid #dde6ef;font-size:15px;width:100%;box-sizing:border-box}
+        .auth-form .row{display:flex;gap:10px}
+        .auth-form .row .col{flex:1}
+        .btn-primary{background:var(--brand-green);color:#fff}
+        .btn-ghost{background:transparent;border:1px solid #e6e9ee}
+        .auth-actions{text-align:right;margin-top:8px}
+        .small{font-size:13px;color:var(--muted)}
+        /* responsive: stack on small screens */
+        @media(max-width:900px){
+            .auth-container{flex-direction:column;align-items:stretch;padding:10px}
+            .auth-hero{order:1;max-width:100%;padding:18px;border-radius:10px}
+            .auth-card{order:2;width:100%;padding:20px;margin-top:12px;border-radius:10px}
+        }
+    </style>
 </head>
 
 <body>
-    <nav class="navbar">
-        <button class="nav-button" id="sign-in-btn">Sign in</button>
-    </nav>
-    <h1 class="lve-header">Loudoun Valley Estates's Homeowners Portal</h1>
-    
+    <div class="wrap">
+        <header>
+            <div>
+                <h1>Community Portal</h1>
+                <div class="meta">Helpful tools for homeowners and admins</div>
+            </div>
 
+            <nav class="topbar" aria-label="main navigation">
+                <a href="/admin">Admin Console</a>
+                <a href="/homeowner">Homeowner</a>
+                <a href="#auth-section">Sign in</a>
+                <div class="spacer"></div>
+                <div class="nav-actions">
+                    <div class="pill">Community A</div>
+                    <button id="header-sign-in-btn" class="btn primary">Sign In</button>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Authentication area merged from auth.html -->
+        <section id="auth-section" style="margin-top:18px">
+            <div class="auth-container">
+                    <aside class="auth-hero" aria-hidden="false">
+                        <div class="logo-card">
+                            <img src="images/clubhouse.png" alt="Clubhouse logo">
+                        </div>
+                        <div class="hero-text">
+                            <h3>Welcome to the Community Portal</h3>
+                            <p class="muted">Manage your homeowner profile, submit requests, and stay connected with neighbors.</p>
+                            <ul>
+                                <li>Quick issue reporting with photos and audio</li>
+                                <li>Track ticket status and comments</li>
+                                <li>Secure homeowner profiles and history</li>
+                            </ul>
+                        </div>
+                    </aside>
+                    <div class="auth-card panel" aria-labelledby="auth-title">
+                    <h2 id="auth-title">Welcome</h2>
+                    <p class="muted">Sign in to your account or create a new homeowner profile.</p>
+
+                    <div class="pill-toggle" role="tablist" aria-label="Auth options">
+                        <button id="auth-sign-in-btn" class="active" aria-controls="sign-in-div">Sign In</button>
+                        <button id="auth-sign-up-btn" aria-controls="sign-up-div">Sign Up</button>
+                    </div>
+
+                    <div class="auth-div" id="sign-in-div" style="display: block;">
+                        <form class="auth-form" id="sign-in-form" action="/signin">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required placeholder="you@example.com">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" required placeholder="••••••••">
+                            <div class="auth-actions">
+                                <button type="submit" class="btn btn-primary">Sign In</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="auth-div" id="sign-up-div" style="display: none;">
+                        <form class="auth-form" id="sign-up-form" action="/signup">
+                            <label for="new-email">Email</label>
+                            <input type="email" id="new-email" name="sign-up-email" required placeholder="you@example.com">
+
+                            <div class="row">
+                                <div class="col">
+                                    <label for="new-name">Name</label>
+                                    <input type="text" id="new-name" name="sign-up-name" required placeholder="Full name">
+                                </div>
+                            </div>
+
+                            <label for="new-password">Password</label>
+                            <input type="password" id="new-password" name="sign-up-password" required placeholder="At least 8 characters">
+
+                            <label for="new-password-confirm">Confirm Password</label>
+                            <input type="password" id="new-password-confirm" name="sign-up-confirm-password" required placeholder="Repeat password">
+
+                            <label for="home-address">Home Address</label>
+                            <input type="text" id="home-address" name="home-address" placeholder="Street, City, State">
+
+                            <div class="row">
+                                <div class="col">
+                                    <label for="phone-number">Phone</label>
+                                    <input type="tel" id="phone-number" name="phone-number" placeholder="(555) 555-5555">
+                                </div>
+                                <div class="col">
+                                    <label for="gender">Gender</label>
+                                    <input type="text" id="gender" name="gender" placeholder="Optional">
+                                </div>
+                            </div>
+
+                            <label for="race">Race</label>
+                            <select id="race" name="race">
+                                <option value="">Prefer not to say</option>
+                                <option value="Asian">Asian</option>
+                                <option value="Black">Black or African American</option>
+                                <option value="Hispanic">Hispanic or Latino</option>
+                                <option value="White">White</option>
+                                <option value="Indigenous">Native American / Alaska Native</option>
+                                <option value="Native Hawaiian">Native Hawaiian or Other Pacific Islander</option>
+                            </select>
+
+                            <div class="auth-actions">
+                                <button type="submit" class="btn btn-primary">Create account</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                
+            </div>
+        </section>
+
+        <main style="margin-top:18px">
+            <div class="hero">
+                <section class="hero-card">
+                    <h2>See issues, report problems, and stay informed</h2>
+                    <p class="lead">Submit community reports, track status, and collaborate with your neighbors. The portal
+                        makes it simple to raise concerns and see actions taken by management.</p>
+
+                    <div class="cta-row">
+                        <button class="btn primary" id="create-report-btn">Create Report</button>
+                        <a href="/homeowner"><button class="btn ghost">View Community</button></a>
+                    </div>
+
+                    <div class="features" style="margin-top:18px">
+                        <div class="feature">
+                            <h4>Fast Reporting</h4>
+                            <p>Quickly submit issues with photos, audio notes, and exact location.</p>
+                        </div>
+                        <div class="feature">
+                            <h4>Transparent Status</h4>
+                            <p>Track the status of every report and see resolution notes from staff.</p>
+                        </div>
+                        <div class="feature">
+                            <h4>Moderation Tools</h4>
+                            <p>Admin actions include assignment, tagging, and redirection to teams.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <section style="margin-top:20px" class="panel">
+                <h3 style="margin:0 0 8px">How it works</h3>
+                <p class="muted" style="margin:0">Submit with photos or audio → Staff triages → Track status and comments.</p>
+                <div class="features" style="margin-top:12px">
+                    <div class="feature"><h4>Step 1</h4><p class="muted">Open the report form and add details.</p></div>
+                    <div class="feature"><h4>Step 2</h4><p class="muted">Attach images or record a quick voice note.</p></div>
+                    <div class="feature"><h4>Step 3</h4><p class="muted">Submit and follow the ticket until resolved.</p></div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div>© Community Portal • Built for simple neighbor collaboration</div>
+        </footer>
+    </div>
+
+    <script>
+        // quick client-side helpers to preserve UX without changing other files
+        document.addEventListener('click', (e)=>{
+            if(e.target && e.target.id === 'create-report-btn'){
+                // go to homeowner page where report form exists
+                window.location.href = '/homeowner';
+            }
+        });
+    </script>
 
     <script src="index.js"></script>
 </body>

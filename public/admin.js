@@ -62,6 +62,18 @@ function showToast(message, type = 'success', duration = 3500) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log(sessionStorage.getItem('email'), sessionStorage.getItem('role'));
+    if(sessionStorage.getItem('role') !== 'admin') {
+        console.warn('Unauthorized access attempt to admin page. Redirecting to home.');
+        window.location.href = '/homeowner';
+        return;
+    } else if (!sessionStorage.getItem('email')) {
+        console.warn('No email in session storage. Redirecting to sign-in.');
+        window.location.href = '/auth';
+        return;
+    }
+
+
     const reports = await fetchReports();
     console.log(reports[0].user_id);
     let userDetailsForEachReport = [];
