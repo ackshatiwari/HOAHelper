@@ -73,7 +73,7 @@
 
         .board {
             display: grid;
-            grid-template-columns: 1fr 360px;
+            grid-template-columns: 40% 60%;
             gap: 16px;
             margin-top: 16px
         }
@@ -222,6 +222,14 @@
                 grid-template-columns: 1fr
             }
         }
+        /* Tabs and ticket styles */
+        .tab-buttons{display:flex;gap:8px;margin-bottom:10px}
+        .tab-btn{padding:8px 12px;border-radius:8px;border:1px solid #e6eefc;background:transparent;cursor:pointer;font-weight:600}
+        .tab-btn.active{background:#eef6ff;border-color:#dbeefe}
+        .ticket-list{display:flex;flex-direction:column;gap:10px}
+        .ticket-item{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px;border-radius:8px;border:1px solid #f1f5f9;background:#fff}
+        .ticket-actions{display:flex;gap:8px;align-items:center}
+        .ticket-item .muted{font-size:12px}
     </style>
 </head>
 
@@ -243,112 +251,237 @@
 
         <div class="board">
             <section class="card complaints-section">
-                <h2>Community Complaints</h2>
-                <div id="complaints-list" style="overflow-y:auto; max-height: 200px;">
-                    <table id="complaints-table">
-                        <thead>
-                            <tr>
-                                <th>Homeowner Name</th>
-                                <th>Description</th>
-                                <th>Date Submitted</th>
-                                <th>Status</th>
-                                <th>Location</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- rows populated by homeowner.js -->
-                        </tbody>
-                    </table>
+                <h2>Your Tickets</h2>
+                <div style="display:flex;gap:10px;margin-bottom:10px">
+                    <button id="add-complaint-btn" class="btn primary">Add Complaint</button>
                 </div>
-                <button class="button" id="add-complaint-btn">Add New Complaint</button>
+                <div class="tabs">
+                    <div class="tab-buttons" role="tablist" aria-label="Ticket tabs">
+                        <button class="tab-btn active" data-target="open-tickets">Open Tickets</button>
+                        <button class="tab-btn" data-target="resolved-tickets">Resolved Tickets</button>
+                    </div>
+
+                    <div class="tab-content" id="open-tickets" style="display:block">
+                        <div class="ticket-list" style="overflow-y:auto; max-height:320px;">
+                            <!-- Example open tickets -->
+                            <div class="ticket-item card">
+                                <div>
+                                    <strong>Broken streetlight</strong>
+                                    <div class="muted">Reported: 2026-02-20</div>
+                                    <div>Light flickers near 12 Maple Ave.</div>
+                                </div>
+                                <div class="ticket-actions">
+                                    <button class="btn ghost">Withdraw</button>
+                                    <button class="btn primary">Nudge</button>
+                                    <button class="btn">Update</button>
+                                </div>
+                            </div>
+
+                            <div class="ticket-item card">
+                                <div>
+                                    <strong>Overflowing trash</strong>
+                                    <div class="muted">Reported: 2026-02-18</div>
+                                    <div>Trash bins at the corner are overflowing.</div>
+                                </div>
+                                <div class="ticket-actions">
+                                    <button class="btn ghost">Withdraw</button>
+                                    <button class="btn primary">Nudge</button>
+                                    <button class="btn">Update</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="resolved-tickets" style="display:none">
+                        <div class="ticket-list" style="overflow-y:auto; max-height:320px;">
+                            <!-- Example resolved tickets -->
+                            <div class="ticket-item card">
+                                <div>
+                                    <strong>Pothole repaired</strong>
+                                    <div class="muted">Reported: 2026-01-30 — Resolved: 2026-02-05</div>
+                                    <div>Pothole on Oak St. was filled and repaved.</div>
+                                </div>
+                                <div class="ticket-actions">
+                                    <button class="btn">Reopen</button>
+                                    <button class="btn ghost">View</button>
+                                    <button class="btn">Download</button>
+                                </div>
+                            </div>
+
+                            <div class="ticket-item card">
+                                <div>
+                                    <strong>Graffiti removed</strong>
+                                    <div class="muted">Reported: 2026-01-10 — Resolved: 2026-01-12</div>
+                                    <div>Graffiti near Park entrance removed.</div>
+                                </div>
+                                <div class="ticket-actions">
+                                    <button class="btn">Reopen</button>
+                                    <button class="btn ghost">View</button>
+                                    <button class="btn">Download</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- add-complaint-btn removed; manual entry button above now opens the form -->
 
                 <dialog class="dialog-box" id="complaint-dialog">
-                    <div class="dialog-inner">
-                        <div class="left">
-                            <h3 style="margin:0 0 8px">Submit a New Complaint</h3>
-                            <div id="map"></div>
-
-                            <form id="complaint-form" action="/submitComplaint" method="POST"
-                                enctype="multipart/form-data">
-                                <div class="container-webcam">
-                                    <video id="webcam" autoplay></video>
-                                    <button type="button" id="capture-btn" class="btn ghost">Capture Photo</button>
-                                    <canvas id="canvasElement" style="display:none"></canvas>
-                                    <img id="photoPreview" name="cameraImage" style="display:none" alt="captured photo">
-                                </div>
-
-                                <div style="margin-top:12px">
-                                    <label for="uploadImageInput">Or Upload an Image</label>
-                                    <input type="file" id="uploadImageInput" name="images" accept="image/*" multiple>
-                                </div>
-
-                                <div style="margin-top:12px">
-                                    <label for="complaint-textarea">Complaint Description</label>
-                                    <textarea id="complaint-textarea" name="description" rows="6"></textarea>
-                                    <img id="audioIcon" src="images/microphone_emoji.png" alt="Record Audio" title="Record Audio" style="width:24px;cursor:pointer;margin-top:6px"></img>
-                                    <img id="stopIcon" src="images/stop_btn.png" alt="Stop Recording" title="Stop Recording" style="width:24px;cursor:pointer;margin-top:6px;" disabled></img>
-                                    
-                                </div>
-
-                                <div style="display:flex;gap:8px;margin-top:8px">
-                                    <div style="flex:1">
-                                        <label for="complaint-type">Category</label>
-                                        <select id="complaint-type" name="type">
-                                            <option>Litter</option>
-                                            <option>Landscaping</option>
-                                            <option>Signage</option>
-                                            <option>Pathways</option>
-                                            <option>Lighting</option>
-                                            <option>Noise</option>
-                                            <option>Other</option>
-                                        </select>
-                                    </div>
-                                    <div style="width:160px">
-                                        <label for="complaint-date">Date</label>
-                                        <input type="date" id="complaint-date" name="date">
-                                    </div>
-                                </div>
-
-                                <div id="submit-container" class="form-actions">
-                                    <button type="submit" class="btn primary">Submit Complaint</button>
-                                    <button type="button" class="btn ghost" id="close-dialog">Cancel</button>
-                                </div>
-                            </form>
+                    <div style="padding:18px;max-width:980px">
+                        <!-- Initial chooser: Manual or AI -->
+                        <div id="create-chooser">
+                            <h3 style="margin:0 0 8px">Create Ticket</h3>
+                            <p class="muted" style="margin:0 0 12px">How would you like to create this ticket?</p>
+                            <div style="display:flex;gap:10px">
+                                <button id="chooser-manual-btn" class="btn primary">Enter Manually</button>
+                                <button id="chooser-ai-btn" class="btn ghost">Use AI Assist</button>
+                                <button id="chooser-cancel" class="btn" style="margin-left:auto">Close</button>
+                            </div>
                         </div>
 
-                        <aside class="right">
-                            <h4 style="margin:0 0 8px">Tips for a good report</h4>
-                            <ul style="margin:0;padding-left:18px;color:var(--muted)">
-                                <li>Include clear photos</li>
-                                <li>Specify the exact location</li>
-                                <li>Be concise in the description</li>
-                            </ul>
-                        </aside>
+                        <!-- Manual panel (hidden until user picks Manual) -->
+                        <div id="manual-panel" style="display:none;margin-top:12px">
+                            <div class="dialog-inner">
+                                <div class="left">
+                                    <h3 style="margin:0 0 8px">Submit a New Complaint</h3>
+                                    <div id="map"></div>
+
+                                    <form id="complaint-form" action="/submitComplaint" method="POST"
+                                        enctype="multipart/form-data">
+                                        <div class="container-webcam">
+                                            <video id="webcam" autoplay></video>
+                                            <button type="button" id="capture-btn" class="btn ghost">Capture Photo</button>
+                                            <canvas id="canvasElement" style="display:none"></canvas>
+                                            <img id="photoPreview" name="cameraImage" style="display:none" alt="captured photo">
+                                        </div>
+
+                                        <div style="margin-top:12px">
+                                            <label for="uploadImageInput">Or Upload an Image</label>
+                                            <input type="file" id="uploadImageInput" name="images" accept="image/*" multiple>
+                                        </div>
+
+                                        <div style="margin-top:12px">
+                                            <label for="complaint-textarea">Complaint Description</label>
+                                            <textarea id="complaint-textarea" name="description" rows="6"></textarea>
+                                            <img id="audioIcon" src="images/microphone_emoji.png" alt="Record Audio" title="Record Audio" style="width:24px;cursor:pointer;margin-top:6px"></img>
+                                            <img id="stopIcon" src="images/stop_btn.png" alt="Stop Recording" title="Stop Recording" style="width:24px;cursor:pointer;margin-top:6px;" disabled></img>
+                                        </div>
+
+                                        <div style="display:flex;gap:8px;margin-top:8px">
+                                            <div style="flex:1">
+                                                <label for="complaint-type">Category</label>
+                                                <select id="complaint-type" name="type">
+                                                    <option>Litter</option>
+                                                    <option>Landscaping</option>
+                                                    <option>Signage</option>
+                                                    <option>Pathways</option>
+                                                    <option>Lighting</option>
+                                                    <option>Noise</option>
+                                                    <option>Other</option>
+                                                </select>
+                                            </div>
+                                            <div style="width:160px">
+                                                <label for="complaint-date">Date</label>
+                                                <input type="date" id="complaint-date" name="date">
+                                            </div>
+                                        </div>
+
+                                        <div id="submit-container" class="form-actions">
+                                            <button type="submit" class="btn primary">Submit Complaint</button>
+                                            <button type="button" class="btn ghost" id="close-dialog">Cancel</button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <aside class="right">
+                                    <h4 style="margin:0 0 8px">Tips for a good report</h4>
+                                    <ul style="margin:0;padding-left:18px;color:var(--muted)">
+                                        <li>Include clear photos</li>
+                                        <li>Specify the exact location</li>
+                                        <li>Be concise in the description</li>
+                                    </ul>
+                                </aside>
+                            </div>
+                        </div>
+
+                        <!-- AI panel (hidden until user picks AI) -->
+                        <div id="ai-panel" style="display:none;margin-top:12px">
+                            <h3 style="margin:0 0 8px">AI Assist — create ticket</h3>
+                            <p class="muted" style="margin:0 0 12px">Choose a source to help generate the ticket description.</p>
+                            <div style="display:flex;gap:12px">
+                                <div style="flex:1">
+                                    <div style="margin-bottom:8px">
+                                        <button id="ai-choose-picture" class="btn">Picture</button>
+                                        <button id="ai-choose-audio" class="btn">Audio</button>
+                                    </div>
+
+                                    <div id="ai-picture-panel" style="display:none">
+                                        <div style="margin-bottom:8px">
+                                            <label class="small">Upload image</label>
+                                            <input id="ai-upload-image" type="file" accept="image/*">
+                                        </div>
+                                        <div style="margin-bottom:8px">
+                                            <label class="small">Or use camera</label>
+                                            <div>
+                                                <button id="ai-start-camera-btn" class="btn ghost">Start Camera</button>
+                                                <video id="ai-webcam" autoplay style="width:100%;max-height:220px;background:#000;border-radius:8px;display:none"></video>
+                                                <button id="ai-capture-btn" class="btn ghost" style="margin-top:6px;display:none">Capture Photo</button>
+                                                <canvas id="ai-canvas" style="display:none"></canvas>
+                                                <img id="ai-image-preview" src="" alt="" style="display:block;margin-top:8px;max-width:100%" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="ai-audio-panel" style="display:none">
+                                        <div style="margin-bottom:8px">
+                                            <label class="small">Record audio</label>
+                                            <div>
+                                                <button id="ai-record-btn" class="btn ghost">Record</button>
+                                                <button id="ai-stop-btn" class="btn ghost" disabled>Stop</button>
+                                                <audio id="ai-audio-playback" controls style="display:block;margin-top:8px"></audio>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="small">Or attach audio file</label>
+                                            <input id="ai-upload-audio" type="file" accept="audio/*">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <aside style="width:320px;background:#fbfdff;padding:12px;border-radius:8px">
+                                    <h4 style="margin:0 0 8px">Preview</h4>
+                                    <div id="ai-preview-area" style="min-height:140px;color:var(--muted)">No media selected.</div>
+                                </aside>
+                            </div>
+
+                            <div style="text-align:right;margin-top:12px">
+                                <button id="ai-generate-btn" class="btn primary">Generate Form</button>
+                                <button id="ai-cancel-btn" class="btn ghost">Back</button>
+                            </div>
+                        </div>
                     </div>
                 </dialog>
             </section>
 
-            <aside class="card" style="min-height:120px">
-                <h3 style="margin-top:0">Your recent reports</h3>
-                <div id="your-reports" style="color:var(--muted);font-size:14px">
-                    <table id="your-reports-table">
-                        <thead>
-                            <tr>
-                                <th>Description</th>
-                                <th>Date Submitted</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- rows populated by homeowner.js -->
-                        </tbody>
-                    </table>
-                </div>
-            </aside>
         </div>
     </div>
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCbcZ3W5eN9r38ZKYOg1GdOT79ymH4gtm8"></script>
+    <script>
+        // Tab switching for tickets only — dialog logic is handled in `homeowner.js`
+        document.addEventListener('DOMContentLoaded', function(){
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const target = btn.getAttribute('data-target');
+                    document.querySelectorAll('.tab-content').forEach(tc => tc.style.display = 'none');
+                    const el = document.getElementById(target);
+                    if(el) el.style.display = 'block';
+                });
+            });
+        });
+    </script>
     <script src="homeowner.js"></script>
 </body>
 

@@ -7,7 +7,6 @@ const canvas = document.getElementById('canvasElement');
 const context = canvas.getContext('2d');
 const photoPreview = document.getElementById('photoPreview');
 const complaintsTable = document.getElementById('complaints-table');
-const yourReportsTable = document.getElementById('your-reports-table');
 const audioIcon = document.getElementById('audioIcon');
 const stopIcon = document.getElementById('stopIcon');
 
@@ -107,23 +106,62 @@ async function viewRecentComplaints() {
     const email = sessionStorage.getItem('email');
     console.log('Retrieved email from sessionStorage for recent complaints:', email);
 
-    const response = await fetch(`/getRecentComplaints?email=${encodeURIComponent(email)}`);
-    const data = await response.json();
-    console.log('Retrieved recent complaints:', data.complaints);
-    // Process or display recent complaints as needed
-    if (data.complaints && data.complaints.length > 0) {
-        data.complaints.forEach(complaint => {
-            const row = yourReportsTable.insertRow();
-            row.insertCell().textContent = complaint.description || 'N/A';
-            row.insertCell().textContent = complaint.created_at || 'N/A';
-            row.insertCell().textContent = complaint.status || 'N/A';
+    // This function is no longer used; ticket rendering is handled by fetchAndRenderUserTickets().
+}
+
+// Fetch user's recent complaints and render into Open / Resolved ticket lists
+async function fetchAndRenderUserTickets() {
+    const email = sessionStorage.getItem('email');
+    if (!email) return;
+    try {
+        const response = await fetch(`/getRecentComplaints?email=${encodeURIComponent(email)}`);
+        const data = await response.json();
+        const complaints = data.complaints || [];
+        const openList = document.querySelector('#open-tickets .ticket-list');
+        const resolvedList = document.querySelector('#resolved-tickets .ticket-list');
+        if (openList) openList.innerHTML = '';
+        if (resolvedList) resolvedList.innerHTML = '';
+
+        complaints.forEach(c => {
+            const isClosed = (c.status && c.status.toLowerCase() === 'closed') || (c.status && c.status.toLowerCase() === 'resolved');
+            const item = document.createElement('div');
+            item.className = 'ticket-item card';
+
+            const info = document.createElement('div');
+            const title = document.createElement('strong');
+            title.textContent = c.title || (c.description ? c.description.split('\n')[0].slice(0,60) : 'Ticket');
+            const meta = document.createElement('div');
+            meta.className = 'muted';
+            const created = c.created_at ? c.created_at.split('T')[0] : (c.created_at || 'N/A');
+            meta.textContent = 'Reported: ' + created + (isClosed && c.resolved_at ? ' — Resolved: ' + c.resolved_at.split('T')[0] : '');
+            const desc = document.createElement('div');
+            desc.textContent = c.description || '';
+
+            info.appendChild(title);
+            info.appendChild(meta);
+            info.appendChild(desc);
+
+            const actions = document.createElement('div');
+            actions.className = 'ticket-actions';
+            if (!isClosed) {
+                const btnWithdraw = document.createElement('button'); btnWithdraw.className='btn ghost'; btnWithdraw.textContent='Withdraw';
+                const btnNudge = document.createElement('button'); btnNudge.className='btn primary'; btnNudge.textContent='Nudge';
+                const btnUpdate = document.createElement('button'); btnUpdate.className='btn'; btnUpdate.textContent='Update';
+                actions.appendChild(btnWithdraw); actions.appendChild(btnNudge); actions.appendChild(btnUpdate);
+                item.appendChild(info); item.appendChild(actions);
+                if (openList) openList.appendChild(item);
+            } else {
+                const btnReopen = document.createElement('button'); btnReopen.className='btn'; btnReopen.textContent='Reopen';
+                const btnView = document.createElement('button'); btnView.className='btn ghost'; btnView.textContent='View';
+                const btnDownload = document.createElement('button'); btnDownload.className='btn'; btnDownload.textContent='Download';
+                actions.appendChild(btnReopen); actions.appendChild(btnView); actions.appendChild(btnDownload);
+                item.appendChild(info); item.appendChild(actions);
+                if (resolvedList) resolvedList.appendChild(item);
+            }
         });
-    } else {
-        const yourReportsDiv = document.getElementById('your-reports');
-        const noReportsMsg = document.createElement('p');
-        noReportsMsg.textContent = 'You have not submitted any complaints yet.';
-        yourReportsDiv.appendChild(noReportsMsg);
-        yourReportsTable.style.display = 'none';
+
+    } catch (err) {
+        console.error('Error fetching user tickets:', err);
     }
 }
 
@@ -158,8 +196,10 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Retrieved email from sessionStorage:', email);
     if (email) {
         document.getElementById('logged-in-as').innerHTML = `${email} | Logged in as Homeowner`;
-        retrieveHundredComplaints();
-        viewRecentComplaints();
+        fetchAndRenderUserTickets();
+        // ensure Enter Manual and AI buttons exist (in case DOM loaded earlier)
+        const addComplaintBtn = document.getElementById('add-complaint-btn');
+        if (addComplaintBtn) addComplaintBtn.addEventListener('click', ()=>{ const dlg = document.getElementById('add-mode-dialog'); if(dlg){ dlg.showModal(); }});
     }
     else {
         window.location.href = '/auth';
@@ -186,12 +226,190 @@ captureBtn.addEventListener('click', (e) => {
     photoPreview.style.display = 'block';
 });
 
+// Show unified complaint dialog with chooser
 addComplaintBtn.addEventListener('click', () => {
+    document.getElementById('create-chooser').style.display = 'block';
+    const manual = document.getElementById('manual-panel');
+    const ai = document.getElementById('ai-panel');
+    if (manual) manual.style.display = 'none';
+    if (ai) ai.style.display = 'none';
     complaintDialog.showModal();
-    initMap();
-
-
 });
+
+// Close dialog helper
+function closeComplaintDialog() {
+    stopAiCamera();
+    stopWebcamStream();
+    complaintDialog.close();
+}
+
+document.getElementById('chooser-cancel')?.addEventListener('click', closeComplaintDialog);
+document.querySelectorAll('#close-dialog').forEach(el => el.addEventListener('click', closeComplaintDialog));
+
+// chooser buttons
+document.getElementById('chooser-manual-btn')?.addEventListener('click', () => {
+    document.getElementById('create-chooser').style.display = 'none';
+    document.getElementById('manual-panel').style.display = 'block';
+    setTimeout(() => initMap(), 300);
+});
+document.getElementById('chooser-ai-btn')?.addEventListener('click', () => {
+    document.getElementById('create-chooser').style.display = 'none';
+    document.getElementById('ai-panel').style.display = 'block';
+});
+
+// AI camera controls
+let aiCameraStream = null;
+async function startAiCamera() {
+    const v = document.getElementById('ai-webcam');
+    try {
+        aiCameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        v.srcObject = aiCameraStream;
+        v.style.display = 'block';
+        document.getElementById('ai-capture-btn').style.display = 'inline-block';
+    } catch (err) {
+        console.error('camera error', err);
+        alert('Could not access camera');
+    }
+}
+
+function stopAiCamera() {
+    if (aiCameraStream) {
+        aiCameraStream.getTracks().forEach(t => t.stop());
+        aiCameraStream = null;
+    }
+    const v = document.getElementById('ai-webcam');
+    if (v) v.style.display = 'none';
+    const btn = document.getElementById('ai-capture-btn');
+    if (btn) btn.style.display = 'none';
+}
+
+document.getElementById('ai-start-camera-btn')?.addEventListener('click', () => startAiCamera());
+document.getElementById('ai-capture-btn')?.addEventListener('click', () => {
+    const v = document.getElementById('ai-webcam');
+    const c = document.getElementById('ai-canvas');
+    c.width = v.videoWidth;
+    c.height = v.videoHeight;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(v, 0, 0);
+    const dataUrl = c.toDataURL('image/png');
+    document.getElementById('ai-image-preview').src = dataUrl;
+    document.getElementById('ai-image-preview').style.display = 'block';
+    stopAiCamera();
+});
+
+// AI picture/audio UI toggles and file previews
+(() => {
+    const aiChoosePicture = document.getElementById('ai-choose-picture');
+    const aiChooseAudio = document.getElementById('ai-choose-audio');
+    const aiPicturePanel = document.getElementById('ai-picture-panel');
+    const aiAudioPanel = document.getElementById('ai-audio-panel');
+    const aiUploadImage = document.getElementById('ai-upload-image');
+    const aiUploadAudio = document.getElementById('ai-upload-audio');
+    const aiPreviewArea = document.getElementById('ai-preview-area');
+    const aiImagePreview = document.getElementById('ai-image-preview');
+    const aiAudioPlayback = document.getElementById('ai-audio-playback');
+
+    if (aiChoosePicture) {
+        aiChoosePicture.addEventListener('click', () => {
+            if (aiPicturePanel) aiPicturePanel.style.display = 'block';
+            if (aiAudioPanel) aiAudioPanel.style.display = 'none';
+            if (aiPreviewArea) aiPreviewArea.innerText = 'Picture mode — select or capture an image.';
+        });
+    }
+    if (aiChooseAudio) {
+        aiChooseAudio.addEventListener('click', () => {
+            if (aiPicturePanel) aiPicturePanel.style.display = 'none';
+            if (aiAudioPanel) aiAudioPanel.style.display = 'block';
+            if (aiPreviewArea) aiPreviewArea.innerText = 'Audio mode — record or upload audio.';
+        });
+    }
+
+    if (aiUploadImage) {
+        aiUploadImage.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const url = URL.createObjectURL(file);
+            if (aiImagePreview) { aiImagePreview.src = url; aiImagePreview.style.display = 'block'; }
+            if (aiPreviewArea) aiPreviewArea.innerText = file.name;
+        });
+    }
+
+    if (aiUploadAudio) {
+        aiUploadAudio.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const url = URL.createObjectURL(file);
+            if (aiAudioPlayback) { aiAudioPlayback.src = url; aiAudioPlayback.style.display = 'block'; }
+            if (aiPreviewArea) aiPreviewArea.innerText = file.name;
+        });
+    }
+
+    // AI panel back/cancel button
+    document.getElementById('ai-cancel-btn')?.addEventListener('click', () => {
+        if (document.getElementById('ai-panel')) document.getElementById('ai-panel').style.display = 'none';
+        if (document.getElementById('create-chooser')) document.getElementById('create-chooser').style.display = 'block';
+        if (aiPreviewArea) aiPreviewArea.innerText = 'No media selected.';
+        stopAiCamera();
+        stopAudioRecording();
+    });
+})();
+
+// AI audio record (separate from manual microphone)
+let aiMediaRecorder = null;
+let aiAudioChunks = [];
+async function startAudioRecording() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        aiMediaRecorder = new MediaRecorder(stream);
+        aiAudioChunks = [];
+        aiMediaRecorder.ondataavailable = (e) => aiAudioChunks.push(e.data);
+        aiMediaRecorder.onstop = () => {
+            const blob = new Blob(aiAudioChunks, { type: 'audio/webm' });
+            const url = URL.createObjectURL(blob);
+            document.getElementById('ai-audio-playback').src = url;
+        };
+        aiMediaRecorder.start();
+        document.getElementById('ai-record-btn').disabled = true;
+        document.getElementById('ai-stop-btn').disabled = false;
+    } catch (err) {
+        console.error('audio error', err);
+        alert('Could not access microphone');
+    }
+}
+
+function stopAudioRecording() {
+    if (aiMediaRecorder) aiMediaRecorder.stop();
+    document.getElementById('ai-record-btn').disabled = false;
+    document.getElementById('ai-stop-btn').disabled = true;
+}
+
+document.getElementById('ai-record-btn')?.addEventListener('click', () => startAudioRecording());
+document.getElementById('ai-stop-btn')?.addEventListener('click', () => stopAudioRecording());
+
+// AI generate: autofill manual form
+document.getElementById('ai-generate-btn')?.addEventListener('click', () => {
+    const preview = document.getElementById('ai-preview-area');
+    const text = preview.innerText || preview.textContent || '';
+    document.getElementById('complaint-textarea').value = text;
+    const aiImg = document.getElementById('ai-image-preview');
+    if (aiImg && aiImg.src) {
+        const p = document.getElementById('photoPreview');
+        p.src = aiImg.src;
+        p.style.display = 'block';
+    }
+    document.getElementById('ai-panel').style.display = 'none';
+    document.getElementById('manual-panel').style.display = 'block';
+    document.getElementById('create-chooser').style.display = 'none';
+});
+
+function stopWebcamStream() {
+    const v = document.getElementById('webcam');
+    if (v && v.srcObject) {
+        const s = v.srcObject;
+        if (s.getTracks) s.getTracks().forEach(t => t.stop());
+        v.srcObject = null;
+    }
+}
 
 complaintForm.addEventListener('submit', (e) => {
     e.preventDefault();
