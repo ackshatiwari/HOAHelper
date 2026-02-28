@@ -84,6 +84,14 @@ function dataURLtoBlob(dataurl) {
     return new Blob([u8arr], { type: mime });
 }
 
+// simple HTML escaper
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, function (s) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[s];
+    });
+}
+
 async function retrieveHundredComplaints() {
     const response = await fetch('/getComplaints');
     const data = await response.json();
@@ -117,47 +125,61 @@ async function fetchAndRenderUserTickets() {
         const response = await fetch(`/getRecentComplaints?email=${encodeURIComponent(email)}`);
         const data = await response.json();
         const complaints = data.complaints || [];
-        const openList = document.querySelector('#open-tickets .ticket-list');
-        const resolvedList = document.querySelector('#resolved-tickets .ticket-list');
-        if (openList) openList.innerHTML = '';
-        if (resolvedList) resolvedList.innerHTML = '';
+        const tbodyOpen = document.getElementById('open-tickets-body');
+        const tbodyResolved = document.getElementById('resolved-tickets-body');
+        if (tbodyOpen) tbodyOpen.innerHTML = '';
+        if (tbodyResolved) tbodyResolved.innerHTML = '';
 
         complaints.forEach(c => {
             const isClosed = (c.status && c.status.toLowerCase() === 'closed') || (c.status && c.status.toLowerCase() === 'resolved');
-            const item = document.createElement('div');
-            item.className = 'ticket-item card';
-
-            const info = document.createElement('div');
-            const title = document.createElement('strong');
-            title.textContent = c.title || (c.description ? c.description.split('\n')[0].slice(0,60) : 'Ticket');
-            const meta = document.createElement('div');
-            meta.className = 'muted';
             const created = c.created_at ? c.created_at.split('T')[0] : (c.created_at || 'N/A');
-            meta.textContent = 'Reported: ' + created + (isClosed && c.resolved_at ? ' — Resolved: ' + c.resolved_at.split('T')[0] : '');
-            const desc = document.createElement('div');
-            desc.textContent = c.description || '';
+            const desc = c.title || (c.description ? c.description.split('\n')[0].slice(0, 200) : '');
+            let latestComment = '';
+            if (c.comments && Array.isArray(c.comments) && c.comments.length) latestComment = c.comments[c.comments.length - 1];
+            else if (c.latest_comment) latestComment = c.latest_comment;
+            else if (c.comment) latestComment = c.comment;
 
-            info.appendChild(title);
-            info.appendChild(meta);
-            info.appendChild(desc);
+            const actionsHtml = !isClosed
+                ? `
+                    <button class="btn ghost" data-id="${c.report_id || c.id || ''}" data-action="withdraw">Withdraw</button>
+                    <button class="btn primary" data-id="${c.report_id || c.id || ''}" data-action="nudge">Nudge</button>
+                    <button class="btn" data-id="${c.report_id || c.id || ''}" data-action="update">Update</button>
+                  `
+                : `
+                    <button class="btn" data-id="${c.report_id || c.id || ''}" data-action="reopen">Reopen</button>
+                    <button class="btn ghost" data-id="${c.report_id || c.id || ''}" data-action="view">View</button>
+                    <button class="btn" data-id="${c.report_id || c.id || ''}" data-action="download">Download</button>
+                  `;
 
-            const actions = document.createElement('div');
-            actions.className = 'ticket-actions';
+            const lastUpdated = created; // template value: same as submitted date
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${created}</td>
+                <td>${lastUpdated}</td>
+                <td><div style="font-weight:600">${escapeHtml(desc)}</div><div class="muted" style="margin-top:6px">${(c.address || '')}</div></td>
+                <td>${escapeHtml(latestComment || '')}</td>
+                <td>${actionsHtml}</td>
+            `;
+
             if (!isClosed) {
-                const btnWithdraw = document.createElement('button'); btnWithdraw.className='btn ghost'; btnWithdraw.textContent='Withdraw';
-                const btnNudge = document.createElement('button'); btnNudge.className='btn primary'; btnNudge.textContent='Nudge';
-                const btnUpdate = document.createElement('button'); btnUpdate.className='btn'; btnUpdate.textContent='Update';
-                actions.appendChild(btnWithdraw); actions.appendChild(btnNudge); actions.appendChild(btnUpdate);
-                item.appendChild(info); item.appendChild(actions);
-                if (openList) openList.appendChild(item);
+                if (tbodyOpen) tbodyOpen.appendChild(row);
             } else {
-                const btnReopen = document.createElement('button'); btnReopen.className='btn'; btnReopen.textContent='Reopen';
-                const btnView = document.createElement('button'); btnView.className='btn ghost'; btnView.textContent='View';
-                const btnDownload = document.createElement('button'); btnDownload.className='btn'; btnDownload.textContent='Download';
-                actions.appendChild(btnReopen); actions.appendChild(btnView); actions.appendChild(btnDownload);
-                item.appendChild(info); item.appendChild(actions);
-                if (resolvedList) resolvedList.appendChild(item);
+                if (tbodyResolved) tbodyResolved.appendChild(row);
             }
+        });
+
+        // attach simple delegation for action buttons
+        [tbodyOpen, tbodyResolved].forEach(tbody => {
+            if (!tbody) return;
+            tbody.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const action = btn.getAttribute('data-action');
+                    const id = btn.getAttribute('data-id');
+                    console.log('Action', action, 'on', id);
+                    // TODO: wire actions (withdraw/nudge/update/reopen/view/download)
+                    alert(`${action} clicked for ${id}`);
+                });
+            });
         });
 
     } catch (err) {

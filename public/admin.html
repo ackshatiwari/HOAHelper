@@ -107,8 +107,20 @@
 
         .grid {
             display: grid;
-            grid-template-columns: 1fr 360px;
-            gap: 12px
+            grid-template-columns: 640px 1fr;
+            gap: 12px;
+            grid-auto-rows: auto;
+        }
+
+        /* allow a child to span full width of the grid (bottom row) */
+        .grid > #report-card {
+            grid-column: 1 / -1;
+        }
+
+        .detail-col {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .card {
@@ -146,6 +158,28 @@
         /* Actions panel */
         .actions h3 {
             margin: 0 0 8px
+        }
+
+        /* Tabs for moderator actions */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .tabs .tab {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #eef2ff;
+            background: transparent;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .tabs .tab.active {
+            background: var(--accent);
+            color: white;
+            border-color: transparent;
         }
 
         .field {
@@ -218,7 +252,7 @@
 
         th,
         td {
-            padding: 10px;
+            padding: 8px;
             border-bottom: 1px solid #f1f5f9;
             text-align: left;
             font-size: 13px
@@ -246,12 +280,12 @@
         }
 
         #report-card {
-            min-height: 500px;
+            min-height: 680px;
             width: 100%;
         }
         #reports-table {
             overflow-y: auto;
-            max-height: 600px;
+            max-height: 420px;
         }
 
         /* Toast notifications */
@@ -360,7 +394,86 @@
 
             <main class="main">
                 <div class="grid">
-                    <!-- Report detail -->
+                    <div class="card" id="reports-table">
+                        <h3 style="margin:0 0 8px">Reports Table</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Category</th>
+                                    <th>Description</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Left column: moderator actions (first row, right side) -->
+                    <aside class="card actions">
+                        <h3>Moderator Actions</h3>
+
+                        <div class="tabs" role="tablist" aria-label="Moderator action tabs">
+                            <button class="tab active" data-action="save" type="button">Add Comment</button>
+                            <button class="tab" data-action="close" type="button">Close</button>
+                            <button class="tab" data-action="redirect" type="button">Reassign</button>
+                        </div>
+
+                        <div class="field" id="moderator-body">
+                            <label id="moderator-label" for="comment">Add comment / instructions</label>
+                            <textarea id="comment" placeholder="Write what to do, include assignee, deadline, or close summary"></textarea>
+                        </div>
+
+                        <div class="field" id="group-field" style="display:none;">
+                            <label for="group">Redirect / Group</label>
+                            <select id="group">
+                                <option>— select —</option>
+                                <option value="landscaping">Grounds / Landscaping</option>
+                                <option value="plumbing">Plumbing</option>
+                                <option value="electrical">Electrical</option>
+                                <option value="general maintenance">General Maintenance</option>
+                                <option value="hvac">HVAC</option>
+                                <option value="roofing">Roofing</option>
+                                <option value="pool">Pool Maintenance</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <table id="staffTable" style="display: none;">
+                                <thead>
+                                    <tr>
+                                        <th>Staff Name</th>
+                                        <th>Staff Email</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="staffTable-body">
+                                    <!-- Staff details will be populated here -->
+                                </tbody>
+                            </table>
+
+                        </div>
+
+                        <div class="field">
+                            <label for="tags">Tags</label>
+                            <input id="tags" placeholder="e.g. urgent, sidewalk, vegetation">
+                        </div>
+
+                        <!-- keep action select for existing logic, but hide it (we'll set it via tabs) -->
+                        <select id="action" style="display:none;">
+                            <option value="save">Save comment</option>
+                            <option value="close">Close case</option>
+                            <option value="redirect">Redirect to group</option>
+                        </select>
+
+                        <div class="btns">
+                            <button class="btn primary" id="apply-mod-actions">Add comment</button>
+                        </div>
+                    </aside>
+
+                    <!-- Report detail (bottom row) spans full width of the grid -->
                     <section class="card" id="report-card">
 
                         <div class="report-header">
@@ -400,88 +513,58 @@
                         </div>
 
                     </section>
-
-                    <!-- Actions / moderation panel -->
-                    <aside class="card actions">
-                        <h3>Moderator Actions</h3>
-                        <div class="field">
-                            <label for="comment">Add comment / instructions</label>
-                            <textarea id="comment"
-                                placeholder="Write what to do, include assignee, deadline, or close summary"></textarea>
-                        </div>
-
-                        <div class="field">
-                            <label for="action">Action</label>
-                            <select id="action">
-                                <option value="save">Save comment</option>
-                                <option value="close">Close case</option>
-                                <option value="redirect">Redirect to group</option>
-                            </select>
-                        </div>
-
-                        <div class="field">
-                            <label for="group">Redirect / Group</label>
-                            <select id="group">
-                                <option>— select —</option>
-                                <option value="landscaping">Grounds / Landscaping</option>
-                                <option value="plumbing">Plumbing</option>
-                                <option value="electrical">Electrical</option>
-                                <option value="general maintenance">General Maintenance</option>
-                                <option value="hvac">HVAC</option>
-                                <option value="roofing">Roofing</option>
-                                <option value="pool">Pool Maintenance</option>
-                            </select>
-                        </div>
-
-                        <div class="field">
-                            <table id="staffTable" style="display: none;">
-                                <thead>
-                                    <tr>
-                                        <th>Staff Name</th>
-                                        <th>Staff Email</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="staffTable-body">
-                                    <!-- Staff details will be populated here -->
-                                </tbody>
-                            </table>
-
-                        </div>
-
-                        
-
-                        <div class="field">
-                            <label for="tags">Tags</label>
-                            <input id="tags" placeholder="e.g. urgent, sidewalk, vegetation">
-                        </div>
-
-                        <div class="btns">
-                            <button class="btn primary" id="apply-mod-actions">Save</button>
-                        </div>
-                    </aside>
-                </div>
-
-                <div class="card" id="reports-table">
-                    <h3 style="margin:0 0 8px">Reports Table</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Category</th>
-                                <th>Description</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-
-                        </tbody>
-                    </table>
                 </div>
             </main>
         </div>
     </div>
     <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <script>
+        // Tabs UI for Moderator Actions (UI only) - updates hidden #action and button label
+        (function () {
+            function $(s) { return document.querySelector(s); }
+            function $all(s) { return Array.from(document.querySelectorAll(s)); }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                var tabs = $all('.tabs .tab');
+                var actionSelect = $('#action');
+                var groupField = $('#group-field');
+                var moderatorLabel = $('#moderator-label');
+                var applyBtn = $('#apply-mod-actions');
+
+                function activate(tab) {
+                    tabs.forEach(function (t) { t.classList.remove('active'); });
+                    tab.classList.add('active');
+                    var mode = tab.getAttribute('data-action');
+                    // set hidden action select so existing logic (admin.js) sees intended action
+                    if (actionSelect) actionSelect.value = mode;
+
+                    // show/hide group field
+                    if (groupField) groupField.style.display = (mode === 'redirect') ? '' : 'none';
+
+                    // update label and button text
+                    if (mode === 'save') {
+                        moderatorLabel.textContent = 'Add comment / instructions';
+                        applyBtn.textContent = 'Add comment';
+                    } else if (mode === 'close') {
+                        moderatorLabel.textContent = 'Close summary';
+                        applyBtn.textContent = 'Close case';
+                    } else if (mode === 'redirect') {
+                        moderatorLabel.textContent = 'Reassign note';
+                        applyBtn.textContent = 'Reassign';
+                    }
+                }
+
+                tabs.forEach(function (tab) {
+                    tab.addEventListener('click', function () { activate(tab); });
+                });
+
+                // initialize
+                if (tabs.length) activate(tabs[0]);
+            });
+        })();
+    </script>
+
     <script src="admin.js"></script>
 </body>
 

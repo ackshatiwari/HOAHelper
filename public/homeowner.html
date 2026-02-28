@@ -12,7 +12,7 @@
             --muted: #6b7280;
             --accent: #0ea5e9;
             --radius: 10px;
-            --max-w: 1100px;
+            --max-w: 1400px;
             font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
         }
 
@@ -73,7 +73,7 @@
 
         .board {
             display: grid;
-            grid-template-columns: 40% 60%;
+            grid-template-columns: 1fr 360px;
             gap: 16px;
             margin-top: 16px
         }
@@ -230,6 +230,10 @@
         .ticket-item{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px;border-radius:8px;border:1px solid #f1f5f9;background:#fff}
         .ticket-actions{display:flex;gap:8px;align-items:center}
         .ticket-item .muted{font-size:12px}
+        .tickets-table{border-collapse:collapse;width:100%;background:var(--card);border-radius:8px;overflow:hidden}
+        .tickets-table th, .tickets-table td{padding:10px;border-bottom:1px solid #f1f5f9;text-align:left;font-size:14px;vertical-align:top}
+        .tickets-table thead th{background:#f8fbff;color:var(--muted);font-weight:700}
+        .tickets-table tbody tr:hover{background:#fbfeff}
     </style>
 </head>
 
@@ -262,64 +266,35 @@
                     </div>
 
                     <div class="tab-content" id="open-tickets" style="display:block">
-                        <div class="ticket-list" style="overflow-y:auto; max-height:320px;">
-                            <!-- Example open tickets -->
-                            <div class="ticket-item card">
-                                <div>
-                                    <strong>Broken streetlight</strong>
-                                    <div class="muted">Reported: 2026-02-20</div>
-                                    <div>Light flickers near 12 Maple Ave.</div>
-                                </div>
-                                <div class="ticket-actions">
-                                    <button class="btn ghost">Withdraw</button>
-                                    <button class="btn primary">Nudge</button>
-                                    <button class="btn">Update</button>
-                                </div>
-                            </div>
-
-                            <div class="ticket-item card">
-                                <div>
-                                    <strong>Overflowing trash</strong>
-                                    <div class="muted">Reported: 2026-02-18</div>
-                                    <div>Trash bins at the corner are overflowing.</div>
-                                </div>
-                                <div class="ticket-actions">
-                                    <button class="btn ghost">Withdraw</button>
-                                    <button class="btn primary">Nudge</button>
-                                    <button class="btn">Update</button>
-                                </div>
-                            </div>
+                        <div style="overflow:auto; max-height:520px;">
+                            <table class="tickets-table" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th style="width:120px">Date</th>
+                                        <th style="width:140px">Last Updated At</th>
+                                        <th>Description</th>
+                                        <th style="width:280px">Latest Comment</th>
+                                        <th style="width:200px">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="open-tickets-body"></tbody>
+                            </table>
                         </div>
                     </div>
 
                     <div class="tab-content" id="resolved-tickets" style="display:none">
-                        <div class="ticket-list" style="overflow-y:auto; max-height:320px;">
-                            <!-- Example resolved tickets -->
-                            <div class="ticket-item card">
-                                <div>
-                                    <strong>Pothole repaired</strong>
-                                    <div class="muted">Reported: 2026-01-30 — Resolved: 2026-02-05</div>
-                                    <div>Pothole on Oak St. was filled and repaved.</div>
-                                </div>
-                                <div class="ticket-actions">
-                                    <button class="btn">Reopen</button>
-                                    <button class="btn ghost">View</button>
-                                    <button class="btn">Download</button>
-                                </div>
-                            </div>
-
-                            <div class="ticket-item card">
-                                <div>
-                                    <strong>Graffiti removed</strong>
-                                    <div class="muted">Reported: 2026-01-10 — Resolved: 2026-01-12</div>
-                                    <div>Graffiti near Park entrance removed.</div>
-                                </div>
-                                <div class="ticket-actions">
-                                    <button class="btn">Reopen</button>
-                                    <button class="btn ghost">View</button>
-                                    <button class="btn">Download</button>
-                                </div>
-                            </div>
+                        <div style="overflow:auto; max-height:520px;">
+                            <table class="tickets-table" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th style="width:120px">Date</th>
+                                        <th>Description</th>
+                                        <th style="width:280px">Latest Comment</th>
+                                        <th style="width:220px">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resolved-tickets-body"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -454,7 +429,7 @@
                             </div>
 
                             <div style="text-align:right;margin-top:12px">
-                                <button id="ai-generate-btn" class="btn primary">Generate Form</button>
+                                <button id="ai-generate-btn" class="btn primary">Proceed</button>
                                 <button id="ai-cancel-btn" class="btn ghost">Back</button>
                             </div>
                         </div>
