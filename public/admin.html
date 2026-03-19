@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Admin — Reports Dashboard</title>
+    <title>Admin — Tickets Dashboard</title>
     <style>
         :root {
             --bg: #f4f7fb;
@@ -107,15 +107,25 @@
 
         .grid {
             display: grid;
-            grid-template-columns: 640px 1fr;
+            /* explicit areas: reports table on top row, report + actions on second row */
+            grid-template-columns: 1fr 360px;
+            grid-template-rows: auto 1fr;
+            grid-template-areas:
+                "reports reports"
+                "report actions";
             gap: 12px;
-            grid-auto-rows: auto;
+            align-items:start;
+            min-height: 0;
         }
 
-        /* allow a child to span full width of the grid (bottom row) */
-        .grid > #report-card {
-            grid-column: 1 / -1;
-        }
+        /* place reports table full-width on the first row */
+        .grid > #reports-table { grid-area: reports; }
+
+        /* place moderator actions into the right column on the second row */
+        .grid > aside.actions { grid-area: actions; }
+
+        /* make the report card sit in the left (wider) column on the second row */
+        .grid > #report-card { grid-area: report; }
 
         .detail-col {
             display: flex;
@@ -167,20 +177,26 @@
             margin-bottom: 10px;
         }
 
+        /* Moderator action tabs: underline style (text-like) */
         .tabs .tab {
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid #eef2ff;
+            padding: 8px 6px;
+            border-radius: 0;
+            border: none;
             background: transparent;
             cursor: pointer;
             font-size: 13px;
+            color: var(--muted);
+            border-bottom: 3px solid transparent;
+            transition: color 140ms ease, border-color 140ms ease;
         }
 
         .tabs .tab.active {
-            background: var(--accent);
-            color: white;
-            border-color: transparent;
+            color: var(--accent);
+            border-bottom-color: var(--accent);
         }
+
+        .tabs .tab:hover { color: var(--accent); }
+        .tabs .tab:focus { outline: none; box-shadow: none; }
 
         .field {
             display: flex;
@@ -228,7 +244,7 @@
 
         .btn.ghost {
             background: transparent;
-            border: 1px solid #e6eefc
+            border: 1px solid #c2d4f5
         }
 
         .btn.warn {
@@ -280,7 +296,7 @@
         }
 
         #report-card {
-            min-height: 680px;
+            min-height: 320px;
             width: 100%;
         }
         #reports-table {
@@ -366,8 +382,8 @@
     <div class="container">
         <header>
             <div>
-                <h1>Reports — Admin Console</h1>
-                <div class="meta">Moderation workspace · View and act on homeowner reports</div>
+                <h1>Tickets — Admin Console</h1>
+                <div class="meta">Moderation workspace · View and act on homeowner tickets</div>
             </div>
             <div class="meta">Logged in as Admin • <span style="color:var(--accent)">Community A</span></div>
         </header>
@@ -376,13 +392,13 @@
             <aside class="sidebar">
                 <h2>Filters</h2>
                 <div class="filters">
-                    <button class="filter-btn" id="all-reports-btn">All Reports <span class="count" id="all-reports-count"></span></button>
+                    <button class="filter-btn" id="all-reports-btn">All Tickets <span class="count" id="all-reports-count"></span></button>
                     <button class="filter-btn" id="open-btn">Unresolved <span class="count" id="open-count"></span></button>
                     <button class="filter-btn" id="closed-btn">Closed <span class="count" id="closed-count"></span></button>
                     <button class="filter-btn" id="redirected-btn">Redirected <span class="count" id="redirected-count"></span></button>
                 </div>
                 <div class="search">
-                    <label for="q">Search reports</label>
+                    <label for="q">Search tickets</label>
                     <input id="q" placeholder="Search by id, name, address...">
                 </div>
                 <div style="margin-top:10px;color:var(--muted);font-size:13px">Quick actions</div>
@@ -395,7 +411,7 @@
             <main class="main">
                 <div class="grid">
                     <div class="card" id="reports-table">
-                        <h3 style="margin:0 0 8px">Reports Table</h3>
+                        <h3 style="margin:0 0 8px">Tickets Table</h3>
                         <table>
                             <thead>
                                 <tr>
@@ -412,7 +428,7 @@
                         </table>
                     </div>
 
-                    <!-- Left column: moderator actions (first row, right side) -->
+                    <!-- Moderator actions (right column, second row) -->
                     <aside class="card actions">
                         <h3>Moderator Actions</h3>
 
@@ -424,7 +440,7 @@
 
                         <div class="field" id="moderator-body">
                             <label id="moderator-label" for="comment">Add comment / instructions</label>
-                            <textarea id="comment" placeholder="Write what to do, include assignee, deadline, or close summary"></textarea>
+                            <textarea id="comment"></textarea>
                         </div>
 
                         <div class="field" id="group-field" style="display:none;">
@@ -456,10 +472,7 @@
 
                         </div>
 
-                        <div class="field">
-                            <label for="tags">Tags</label>
-                            <input id="tags" placeholder="e.g. urgent, sidewalk, vegetation">
-                        </div>
+                       
 
                         <!-- keep action select for existing logic, but hide it (we'll set it via tabs) -->
                         <select id="action" style="display:none;">
@@ -473,17 +486,17 @@
                         </div>
                     </aside>
 
-                    <!-- Report detail (bottom row) spans full width of the grid -->
+                    <!-- Ticket detail (left column, second row) -->
                     <section class="card" id="report-card">
 
                         <div class="report-header">
                             <div style="flex:1">
                                 <h2 style="margin:0 0 6px" id="report-header">
-                                    Report Title
+                                    Ticket Title
                                 </h2>
 
                                 <div class="report-meta" id="report-author-details">
-                                    Reported by [Name] • [Date] • [Location]
+                                    Submitted by [Name] • [Date] • [Location]
                                 </div>
 
                                 <div style="margin-top:10px" id="report-category">
@@ -502,14 +515,14 @@
                         <div style="margin-top:12px;color:#111827">
                             <strong>Summary</strong>
                             <p style="margin:6px 0 0;color:var(--muted)" id="complaint-summary">
-                                This is where the report description will appear. It explains the issue reported by the
+                                This is where the ticket description will appear. It explains the issue submitted by the
                                 user.
                             </p>
                         </div>
 
                         <div class="images" id="report-images">
-                            <img src="/placeholder-image.png" alt="Report image 1">
-                            <img src="/placeholder-image.png" alt="Report image 2">
+                            <img src="/placeholder-image.png" alt="Ticket image 1">
+                            <img src="/placeholder-image.png" alt="Ticket image 2">
                         </div>
 
                     </section>

@@ -139,24 +139,28 @@ async function fetchAndRenderUserTickets() {
             else if (c.latest_comment) latestComment = c.latest_comment;
             else if (c.comment) latestComment = c.comment;
 
-            const actionsHtml = !isClosed
-                ? `
-                    <button class="btn ghost" data-id="${c.report_id || c.id || ''}" data-action="withdraw">Withdraw</button>
-                    <button class="btn primary" data-id="${c.report_id || c.id || ''}" data-action="nudge">Nudge</button>
-                    <button class="btn" data-id="${c.report_id || c.id || ''}" data-action="update">Update</button>
-                  `
-                : `
-                    <button class="btn" data-id="${c.report_id || c.id || ''}" data-action="reopen">Reopen</button>
-                    <button class="btn ghost" data-id="${c.report_id || c.id || ''}" data-action="view">View</button>
-                    <button class="btn" data-id="${c.report_id || c.id || ''}" data-action="download">Download</button>
-                  `;
+                        const actionsHtml = !isClosed
+                                ? `
+                                        <div class="ticket-actions">
+                                            <button class="btn ghost" data-id="${c.report_id || c.id || ''}" data-action="withdraw">Withdraw</button>
+                                            <button class="btn primary" data-id="${c.report_id || c.id || ''}" data-action="nudge">Nudge</button>
+                                            <button class="btn" data-id="${c.report_id || c.id || ''}" data-action="update">Update</button>
+                                        </div>
+                                    `
+                                : `
+                                        <div class="ticket-actions">
+                                            <button class="btn" data-id="${c.report_id || c.id || ''}" data-action="reopen">Reopen</button>
+                                            <button class="btn ghost" data-id="${c.report_id || c.id || ''}" data-action="view">View</button>
+                                            <button class="btn" data-id="${c.report_id || c.id || ''}" data-action="download">Download</button>
+                                        </div>
+                                    `;
 
             const lastUpdated = created; // template value: same as submitted date
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${created}</td>
                 <td>${lastUpdated}</td>
-                <td><div style="font-weight:600">${escapeHtml(desc)}</div><div class="muted" style="margin-top:6px">${(c.address || '')}</div></td>
+                <td>${escapeHtml(desc)}<div class="muted" style="margin-top:6px">${(c.address || '')}</div></td>
                 <td>${escapeHtml(latestComment || '')}</td>
                 <td>${actionsHtml}</td>
             `;

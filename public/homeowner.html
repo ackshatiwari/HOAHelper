@@ -184,6 +184,28 @@
             font-size: 14px
         }
 
+        /* Styled file chooser button for dialog file inputs */
+        input[type="file"] {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        input[type="file"]::file-selector-button,
+        input[type="file"]::-webkit-file-upload-button {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            margin-right: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        input[type="file"]::file-selector-button:hover,
+        input[type="file"]::-webkit-file-upload-button:hover {
+            filter: brightness(0.95);
+        }
+
         textarea {
             min-height: 120px;
             resize: vertical
@@ -223,12 +245,35 @@
             }
         }
         /* Tabs and ticket styles */
-        .tab-buttons{display:flex;gap:8px;margin-bottom:10px}
-        .tab-btn{padding:8px 12px;border-radius:8px;border:1px solid #e6eefc;background:transparent;cursor:pointer;font-weight:600}
-        .tab-btn.active{background:#eef6ff;border-color:#dbeefe}
+        .tab-buttons{display:flex;gap:8px;margin-bottom:10px;background:transparent;border-top:none}
+        /* Tabs: underline indicator style (text-like tabs) */
+        .tab-btn{
+            display:inline-block;
+            padding:8px 6px;
+            border-radius:0;
+            background:transparent;
+            cursor:pointer;
+            font-weight:600;
+            color:var(--muted);
+            transition:color 140ms ease, border-color 140ms ease;
+            border: none;
+            border-bottom:3px solid transparent;
+        }
+        .tab-btn.active{
+            color:var(--accent);
+            border-bottom-color:var(--accent);
+        }
+        .tab-btn:hover{color:var(--accent)}
+        .tab-btn:focus{outline: none; box-shadow: none}
         .ticket-list{display:flex;flex-direction:column;gap:10px}
         .ticket-item{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px;border-radius:8px;border:1px solid #f1f5f9;background:#fff}
-        .ticket-actions{display:flex;gap:8px;align-items:center}
+        .ticket-actions{display:flex;gap:8px;align-items:center;flex-wrap:nowrap}
+        .ticket-actions .btn{white-space:nowrap}
+        .btn{padding:10px 12px;border-radius:8px;border:none;cursor:pointer;transition:all 140ms ease}
+        .btn.primary{background:var(--accent);color:#fff;box-shadow:0 8px 24px rgba(37,99,235,0.12)}
+        .btn.primary:hover{transform:translateY(-1px);filter:brightness(0.97)}
+        .btn.ghost{background:transparent;border:1px solid #e6eefc;color:var(--muted)}
+        .btn.ghost:hover{background:#fbfdff}
         .ticket-item .muted{font-size:12px}
         .tickets-table{border-collapse:collapse;width:100%;background:var(--card);border-radius:8px;overflow:hidden}
         .tickets-table th, .tickets-table td{padding:10px;border-bottom:1px solid #f1f5f9;text-align:left;font-size:14px;vertical-align:top}
@@ -249,7 +294,7 @@
 
         <nav class="navbar" aria-label="main navigation">
             <a href="/homeowner">Homeowner Page</a>
-            <a href="/index">Home Page</a>
+            <a href="/">Home Page</a>
             <p id="logged-in-as"> | Logged in as Homeowner </p>
         </nav>
 
@@ -307,8 +352,8 @@
                             <h3 style="margin:0 0 8px">Create Ticket</h3>
                             <p class="muted" style="margin:0 0 12px">How would you like to create this ticket?</p>
                             <div style="display:flex;gap:10px">
-                                <button id="chooser-manual-btn" class="btn primary">Enter Manually</button>
-                                <button id="chooser-ai-btn" class="btn ghost">Use AI Assist</button>
+                                <button id="chooser-ai-btn" class="btn primary">Use AI Assist</button>
+                                <button id="chooser-manual-btn" class="btn ghost">Enter Manually</button>
                                 <button id="chooser-cancel" class="btn" style="margin-left:auto">Close</button>
                             </div>
                         </div>
@@ -326,7 +371,7 @@
                                             <video id="webcam" autoplay></video>
                                             <button type="button" id="capture-btn" class="btn ghost">Capture Photo</button>
                                             <canvas id="canvasElement" style="display:none"></canvas>
-                                            <img id="photoPreview" name="cameraImage" style="display:none" alt="captured photo">
+                                            <img id="photoPreview" name="cameraImage" style="display:none">
                                         </div>
 
                                         <div style="margin-top:12px">
