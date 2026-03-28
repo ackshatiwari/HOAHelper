@@ -79,7 +79,7 @@
         :root{--brand-green:#4CAF50;--brand-blue:#008CBA}
         .auth-container{max-width:980px;margin:18px auto;padding:12px;display:flex;gap:28px;align-items:stretch;justify-content:space-between}
         /* left welcome panel */
-        .auth-hero{flex:1;min-width:240px;max-width:540px;display:flex;flex-direction:column;gap:12px;padding:18px 18px 18px 18px;background:linear-gradient(180deg,rgba(15,118,110,0.03),rgba(14,165,233,0.01));border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.04);align-items:stretch;justify-content:space-between;min-height:320px}
+        .auth-hero{flex:1;min-width:240px;max-width:540px;display:flex;flex-direction:column;gap:12px;padding:18px 18px 18px 18px;background:linear-gradient(180deg,rgba(15,118,110,0.03),rgba(14,165,233,0.01));border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.04);align-items:stretch;justify-content:flex-start;min-height:320px}
         .logo-card{width:100%;height:100%;border-radius:10px;background:transparent;padding:0;display:flex;align-items:center;justify-content:center;margin:0;box-shadow:none}
         .logo-card img{width:100%;max-width:420px;height:auto;display:block;border-radius:8px;object-fit:contain}
         .auth-hero h3{margin:4px 0 6px;font-size:18px}
@@ -90,9 +90,11 @@
         /* right login card */
         .auth-card{background:var(--card);border-radius:12px;box-shadow:0 8px 32px rgba(12,16,20,0.06);padding:28px;width:420px;align-self:center}
         .auth-card h2{margin:0 0 12px 0}
-        .pill-toggle{text-align:center;margin-bottom:18px}
-        .pill-toggle button{background:transparent;border:1px solid #e6e9ee;padding:10px 18px;border-radius:999px;margin:0 6px;cursor:pointer;font-weight:600}
-        .pill-toggle button.active{background:var(--brand-blue);color:#fff;border-color:transparent}
+        .tab-buttons{display:flex;gap:8px;margin-bottom:10px;background:transparent;border-top:none;justify-content:center}
+        .tab-btn{display:inline-block;padding:8px 10px;border-radius:0;background:transparent;cursor:pointer;font-weight:600;color:var(--muted);transition:color 140ms ease, border-color 140ms ease;border:none;border-bottom:3px solid transparent}
+        .tab-btn.active{color:var(--brand-blue);border-bottom-color:var(--brand-blue)}
+        .tab-btn:hover{color:var(--brand-blue)}
+        .tab-btn:focus{outline:none}
         .auth-form{display:flex;flex-direction:column;gap:10px}
         .auth-form label{font-size:14px;color:var(--muted)}
         .auth-form input,.auth-form select{padding:12px;border-radius:8px;border:1px solid #dde6ef;font-size:15px;width:100%;box-sizing:border-box}
@@ -151,9 +153,9 @@
                     <h2 id="auth-title">Welcome</h2>
                     <p class="muted">Sign in to your account or create a new homeowner profile.</p>
 
-                    <div class="pill-toggle" role="tablist" aria-label="Auth options">
-                        <button id="auth-sign-in-btn" class="active" aria-controls="sign-in-div">Sign In</button>
-                        <button id="auth-sign-up-btn" aria-controls="sign-up-div">Sign Up</button>
+                    <div class="tab-buttons" role="tablist" aria-label="Auth options">
+                        <button id="auth-sign-in-btn" class="tab-btn active" data-target="sign-in-div" role="tab" aria-selected="true">Sign In</button>
+                        <button id="auth-sign-up-btn" class="tab-btn" data-target="sign-up-div" role="tab" aria-selected="false">Sign Up</button>
                     </div>
 
                     <div class="auth-div" id="sign-in-div" style="display: block;">
@@ -275,6 +277,35 @@
                 window.location.href = '/homeowner';
             }
         });
+
+        // Auth tab switching (simple, accessible)
+        (function(){
+            const tabs = document.querySelectorAll('.tab-buttons .tab-btn');
+            if(!tabs || tabs.length === 0) return;
+            function activateTab(btn){
+                tabs.forEach(b=>{
+                    const targetId = b.getAttribute('data-target');
+                    const panel = document.getElementById(targetId);
+                    if(b === btn){
+                        b.classList.add('active');
+                        b.setAttribute('aria-selected','true');
+                        if(panel) panel.style.display = 'block';
+                    } else {
+                        b.classList.remove('active');
+                        b.setAttribute('aria-selected','false');
+                        if(panel) panel.style.display = 'none';
+                    }
+                });
+            }
+            tabs.forEach(b=>{
+                b.addEventListener('click', (ev)=>{
+                    activateTab(b);
+                });
+            });
+            // initialize based on active class or default to first
+            const initial = document.querySelector('.tab-buttons .tab-btn.active') || tabs[0];
+            if(initial) activateTab(initial);
+        })();
     </script>
 
     <script src="index.js"></script>
